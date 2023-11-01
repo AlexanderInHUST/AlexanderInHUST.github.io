@@ -19,6 +19,18 @@
 \usepackage{longtable}
 \usepackage{nameref}
 
+\usepackage{amssymb}
+\usepackage[noend,ruled,linesnumbered]{algorithm2e}
+\usepackage{hyperref}
+\usepackage{makecell}
+\usepackage{tabularx, environ}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{caption}
+\usepackage{multirow}
+\RequirePackage{graphicx}
+\hypersetup{hidelinks}
+
 \linespread{1.2}
 %\setlength\parskip{0.5\baselineskip}
 \pagestyle{fancy}
@@ -38,46 +50,57 @@
 \centering
 Abstract of thesis entitled\\
 ~\\
-{\Large \bf Integrated optimization design framework for metallic orthopedic devices with graded-density lattice microstructures}\\
+{\Large \bf 
+    Hardware-aware algorithm optimization on AI processors: Huawei Ascend as an example
+}\\
 ~\\
 submitted by\\
 ~\\
-{\Large \bf Jiuzhao Zhou}\\
+{\Large \bf Yifeng Tang}\\
 ~\\
 for the degree of Doctor of Philosophy\\
 at the University of Hong Kong\\
-in November 2022\\
+in Janurary 2024\\
 ~\\
 \justifying
-Porous femoral implants and spinal cages have drawn increasing attention in the treatment of total hip arthroplasty and lumber inter-body fusion for their satisfactory performance in ossature bio-mimicity. Nevertheless, conventional porous orthopedic devices adopt uniform-density and isotropic lattice microstructures, which does not accord with the actual loading condition in femur and spine. In this thesis, an integrated optimization design framework is proposed for metallic femoral implants and spinal cages with graded-density and anisotropic lattice microstructures. The framework includes three moduli: lattice microstructure mechanical property homogenization, gradient-based device topology optimization and lattice device configuration reconstruction.\\
 
-As a pre-request of optimization design, a data-driven mechanical property homogenization system for anisotropic lattice unit cells is established based on Gaussian process (GP) machine learning model. Key parameters of the GP kernel is fitted by training a pre-prepared sample dataset. The system can promptly predict stiffness modulus and failure strengths of simple orthotropic lattice unit cells with arbitrary interior architecture. The reliability of GP homogenization system is verified by error and correlation analysis on testing dataset. Results reveals that single-output GP process achieves highest prediction accuracy than multi-output GP process. The maximum prediction error observed is lower than 10\%. Strong positive correlation close to 1 is observed on GP-predicted output variables and their reference values.\\
+Artificial Intelligence (AI) is one of the most prominent and impactful applications in both the fields of research and industry. However, complex AI models with massive parameters require sufficient computational power, which specialized hardware named AI processors can provide. In this thesis, we study the design and performance of Huawei Ascend processors, a typical example of AI processors, and propose novel optimization techniques for efficient algorithm implementation.
 
-Optimization designs are conducted for anisotropic lattice femoral implant and isotropic graded-density lattice spinal cage. Maximum global compliance in orthopedic device is selected as the objective function of optimization framework. Metallic materials are moved from high-stress zones to low-stress zones in devices, so that the locally-concentrated bone stress is re-allocated to areas with lower stress, which moderates the stress shielding problem in femur and vertebrae. Constraint conditions of the optimization are designed based on clinical requirements and additive manufacturing capabilities. The design of femoral implants and spinal cages utilizes MMA algorithm. Four loading conditions with different body load eccentricity are simulated for design of spinal cage. The bio-mechanical performance of the optimized devices are evaluated by calculation of resorbed bone mass fraction and global stress shielding intensity. After optimization, the graded-density anisotropic femoral implant successfully reduces the resorbed bone mass fraction by 39.4\% and 47.5\% compared to graded-density isotropic and uniform-density cases. For spinal cage, reduction of resorbed bone mass fraction by 17\% to 38\% is achieved by the MMA algorithm.\\
+AI processors are mainly composed of matrix multiplier-accumulators (MACs), which compute the matrix multiplications with extreme computation power. Matrix multiplications are the core operations of many AI algorithms, such as convolutional neural networks (CNNs) and transformers. However, only matrix multiplications cannot compose a complete AI application. AI processors also need other hardware units to support different types of operations and data transfers.
 
-Upon the completion of optimization domain, in order to convert the optimal design variables to printable lattice device configurations, a series of reconstruction instructions are proposed for orthopedic devices meshed with different types of elements. The configuration of optimized anisotropic femoral implant and graded-density spinal cages are presented, based on which the device product for clinical use can be directly fabricated via additive manufacturing technique.\\
+Huawei Ascend processors equip four types of hardware units: IO units for intra- or inter-core data transfer, vector units for vectorized operations, scalar units for address calculations or condition branch analyses, and matrix MACs for matrix multiplications. Each type of unit has its own characteristics and limitations, which affect the performance and optimization of AI algorithms on Ascend processors.
 
-(451 words)\\
+To fully understand the structure and behavior of Ascend processors, we first propose specially crafted micro-benchmarks to identify their hardware characteristics, such as IO contentions, bandwidth sharing, and runtime behaviors. Based on the collected results, we formulate a performance model, Verrocchio, which predicts the execution time of real-world Ascend kernels with high accuracy. Verrocchio achieves average error rates of 2.62$\%$ and 2.30$\%$ in sample kernels for single-core and double-core execution, respectively.
+
+Based on the fact that compared to the matrix MACs, other units usually perform poorly and significantly ruin the performance of the whole application.
+In addition to the performance model, we also provide two major optimization approaches for efficient algorithm implementation on Ascend processors: 1) replacing the most inefficient operations with better ones, and 2) replacing the scalar or vector operations with matrix multiplications. For the first approach, we use \textit{k}-nearest neighbors (\textit{k}-NN) algorithm as an example and propose SelB-\textit{k}-NN (Selection-Bitonic-\textit{k}-NN), which avoids the expansion of the weakly-supported operations on large-scale datasets. In evaluation, SelB-\textit{k}-NN achieves 2.01$\times$ speedup over the bitonic \textit{k}-selection, 23.93$\times$ over the heap approach, and 78.52$\times$ over the CPU approach. For the second approach, we propose a novel method, Cube-f(x), to evaluate special functions by computing their Taylor polynomials with matrix MACs. Evaluations show that Cube-f(x) outperforms the naive Taylor expansion implementation by 2.79$\times$, CORDIC by 6.12$\times$, and Horner's Method by 1.66$\times$.
+
+(414 words)
+
 \newpage
 \thispagestyle{empty}
 ~\\
 %=============================================================================
+
+
 \newpage
 \thispagestyle{empty}
 \centering
 
-{\Large \bf Integrated optimization design framework for metallic orthopedic devices with graded-density lattice microstructures}\\
+{\Large \bf 
+    Hardware-aware algorithm optimization on AI processors: Huawei Ascend as an example
+}\\
 ~\\
 ~\\
 \begin{figure}[htbp]
-\centering
-\includegraphics[width=5 cm]{fig/logo}
-\label{e_error}
+    \centering
+    \includegraphics[width=5 cm]{fig/logo}
+    \label{fig:logo}
 \end{figure}
 ~\\
-{\bf \large Jiuzhou Zhao}\\
+{\bf \large Yifeng Tang}\\
 ~\\
-Department of Civil Engineering\\
+Department of Computer Science\\
 The University of Hong Kong\\
 ~\\
 Thesis submitted to the University of Hong Kong,\\
@@ -85,13 +108,13 @@ in partial fulfillment of the requirements for\\
 the degree of Doctor of Philosophy.\\
 ~\\
 ~\\
-November 2022\\
+Janurary 2024\\
 
 \justifying
 
 \newpage
 \thispagestyle{empty}
-~\\
+~
 %=============================================================================
 \newpage
 \thispagestyle{empty}
@@ -99,17 +122,17 @@ November 2022\\
 {\bf \large Declaration}\\
 ~\\
 \justifying
-I hereby declare that the thesis entitled ``Integrated optimization design framework for metallic orthopedic devices with graded-density lattice microstructures'' represents my own work, except where due acknowledgement is made, and that it has not been previously included in a thesis, dissertation or report submitted to this University or to any other institution for a degree, diploma or other qualifications.\\
+I hereby declare that the thesis entitled \textit{Hardware-aware algorithm optimization on AI processors: Huawei Ascend as an example} represents my own work, except where due acknowledgement is made, and that it has not been previously included in a thesis, dissertation or report submitted to this University or to any other institution for a degree, diploma or other qualifications.
 
 \flushright
 
-Jiuzhou Zhao\\
-November 2022\\
+Yifeng Tang\\
+Janurary 2024\\
 
 \justifying
 \newpage
 \thispagestyle{empty}
-~\\
+~
 
 %=============================================================================
 \newpage
@@ -118,15 +141,9 @@ November 2022\\
 {\bf \large Acknowledgement}\\
 ~\\
 \justifying
-First and foremost, I would like to devote my deepest gratitude to my supervisor, Professor Xiaowei Deng, for his guidance and encouragement throughout my research. Professor Deng can always identify cutting-edge research topics and shares with us. He can always point out the weakness of my research work and explore solutions with me. I would also like to thank my co-supervisor, Professor Ray Kai Leung Su. He brought me to the world of finite element analysis. I would like to express my sincere thanks to Professor Grace Teng Zhang. She always provides me sufficient support when I am faced with challenges from medical research field.\\
 
-I would like to thank my labmates: Jiajun Chen, Zhikun Dong, Xinxin Feng, Senbin Huang, Mahram Khan, Chermila Piyumi, Qiulei Wang, Kun Yang, Shanghui Yang. I will never forget those days we stayed together,\\
+TODO
 
-I would like to thank the department's general office staff for helping me with my research life. They are very responsive, kind, professional, and helpful.\\
-
-I deeply appreciate my parents, Shufu Zhao and Yanxia Sun, my other relatives, and all of my friends for their all-round support. I would like to show special thanks to my close friend Zhuoran Ji, for his selfless technical supports on my research work.\\
-
-Finally, I would like to express my deepest and most sincere apologies to my grandmother and grandfather's mother. They passed away during my doctoral research days. Every time I left my hometown for Hong Kong, I told them I would be back soon, like in a few months. But every time I broke my promise.\\
 \thispagestyle{empty}
 %=============================================================================
 \newpage
@@ -145,7 +162,7 @@ Finally, I would like to express my deepest and most sincere apologies to my gra
 
 \newpage
 \thispagestyle{empty}
-~\\
+~
 
 %=============================================================================
 \newpage
@@ -153,50 +170,109 @@ Finally, I would like to express my deepest and most sincere apologies to my gra
 \pagenumbering{arabic}
 
 \chapter{Introduction}
-\label{intro}
+\label{chp_1_introduction}
+
+As the world becomes more dependent on artificial intelligence, the need for efficient and powerful hardware to run deep neural networks (DNNs) becomes more urgent. DNNs have revolutionized various domains, such as medical biology \cite{zitnik2019machine}, renewable energy \cite{gensler2016deep}, and autonomous cars \cite{tian2018deeptest}, by enabling complex and intelligent tasks that were previously impossible or impractical. However, DNNs also require high computational power, especially for matrix multiplications, which are the core operations of most DNN architectures. Conventional processors, designed for general-purpose computing, cannot meet this demand efficiently, resulting in high energy consumption, long execution time, and limited scalability. Therefore, there is a growing need for specialized hardware that can accelerate DNNs and optimize their performance. Hardware producers propose a kind of domain-specific hardware called Artificial Intelligence (AI) processors \cite{DBLP:journals/cacm/HennessyP19, DBLP:journals/micro/ChoquetteGGSK21, DBLP:conf/isca/JouppiYPPABBBBB17, DBLP:conf/isca/LiuDTHLXCC16, DBLP:conf/hotchips/LiaoTXZ19}, featuring specialized AI acceleration units. Most AI acceleration units target to accelerate the matrix multiplications, named the matrix multiplier-accumulators (MACs). By significantly reducing the execution time of matrix multiplications, the novel hardware naturally improves the performance of the DNNs. 
+
+Similar to the general-purpose GPUs with CUDA, researchers and programmers are exploring extending the capability of the AI processors for more applications in addition to DNNs. However, compared to the matrix multiplications, the AI processors usually make other algorithms migrated from other platforms inefficient, severely ruining the programmability and generality \cite{DBLP:conf/icpp/JiW21, DBLP:conf/hotchips/LiaoTXZ19, DBLP:conf/isca/JouppiYPPABBBBB17, DBLP:conf/isca/LiuDTHLXCC16, cambricon, CANN, jax}. In order to perform algorithm optimization on the AI processor, a clear understanding of its specific design and tradeoff is significantly needed. Therefore, taking Huawei Ascend processors \cite{DBLP:conf/hotchips/LiaoTXZ19} as an example, this thesis deeply investigates its architecture and proposes detailed hardware-aware algorithm optimization approaches.
+
+Ascend \cite{DBLP:conf/hotchips/LiaoTXZ19} is a novel AI processor architecture provided by Huawei. Based on Ascend architecture, Huawei released Ascend 310, a mini AI processor. Ascend 310 has two DaVinci Cores and offers 8 TFLOPS (FP16) or 16 TOPS (INT8) computation power with a low power cost of 8W. Recently, Huawei introduced a full-stack framework called CANN \cite{CANN}. It allows programmers to design and implement custom DNN operators on the Ascend 310, enabling researchers to propose specific algorithms and optimize their applications \cite{DBLP:conf/ipps/RohwedderCAACW21, DBLP:conf/icpp/JiW21}. Ascend processors adopt the SIMD (Single Instruction Multiple Data) execution model, a combination of separate memory buffers and shared Unified Buffer, and a $16 \times 16$ tree-like matrix MACs, Cube Unit, as the AI acceleration unit.
+
+This thesis first proposes a performance model, Verrocchio, for Huawei Ascend AI processors. Given a kernel program of Ascend Cube-based Compute Engine (CCE) instructions, Verrocchio predicts the execution time of each instruction and the whole kernel program based on the discrete-event simulation. To formulate the performance model, in addition to the regular benchmarks for individual hardware unit performance, we develop micro-benchmarks to reveal the bandwidth contention details of the data paths. As a result, the performance model and benchmark results reveal the most critical design tradeoff of the AI processors, intentionally enhancing the matrix MACs by reducing the support for other necessary operations, including IO, vectorized, and scalar operations. Since complete applications require diverse operations instead of matrix multiplications alone, these inadequate operations significantly slow down overall performance, especially for those non-DNN applications people are trying to adapt.
+
+Therefore, considering the specific hardware features, we propose two major approaches to achieve hardware-aware algorithm optimization on the AI processors. The first approach is replacing the most inefficient operations with better operations. While matrix multiplications show the best performance among all operations, the scalar operations and vectorized comparisons \& selections perform the worst among the others. To illustrate this approach, we present SelB-\textit{k}-NN, a \textit{k}-nearest neighbors algorithm that minimizes the use of these weak operations. The second approach is to transform scalar or vector operations into matrix multiplications. We demonstrate this approach with Cube-f(x), which uses the Matrix MACs on the AI processors to compute special functions with Taylor polynomials. Cube-f(x) regards the building and computation of Taylor polynomials as special cases of matrix multiplications. Although the second strategy has a higher theoretical performance, the first strategy is still essential and valuable, as not all algorithms can be converted to matrix multiplications, which are highly optimized by the Matrix MACs
+
 
 \section{Background}
-\label{intro_back}
+\label{sec_1_1_background}
 
-In orthopedic clinical treatment, metallic devices are commonly utilized to achieve desired bio-mechanical functions in patients's skeleton system. Among different replacement treatment techniques, total arthroplasty replacement and lumbar inter-body fusion attract special attentions for their treatment efficacy in hip joint disability and low back pain. During the operation process, metallic femoral implant and spinal cages are implanted to act as load-bearing component of human body.\\
+\subsection{AI processors}
 
-\subsection{Hip joint disability}
+\begin{table}[tbp]
+    \caption{Specifications of current popular AI processors}
+    \label{tab:sec_1_1_table_1}
+    \begin{center}
+    
+    \scalebox{0.69}{
+        \begin{tabular}{c|c|c|c}
+        \toprule[1pt]
+            \textbf{AI Processor} &
+            \textbf{\makecell[c]{Exec. \\ Model}} &
+            \textbf{Memory Hierarchy} &
+            \textbf{AI Acceleration Unit} \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Qualcomm \\ Hexagon 780 \cite{HDSP}} &
+        \makecell[c]{SIMT} &
+        \makecell[c]{Seamless shared memory for \\ all acceleration units} &
+        \makecell[c]{Fused AI Accelerator including \\ Scalar, Tensor \& Vector}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Google \\ TPU V4 \cite{DBLP:conf/isca/JouppiYPPABBBBB17}} &
+        \makecell[c]{SIMD} & 
+        \makecell[c]{Unified buffer as local storage \\ DRAM Chips as weights inputs} &
+        \makecell[c]{Matrix Multiply Unit based on \\ 256 $\times$ 256 systolic array}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Cambricon \\ MLU290-M5 \cite{MLU290}} &
+        \makecell[c]{SIMD} &
+        \makecell[c]{Scratchpad memories for units \\ separately w/ DMA to IO} &
+        \makecell[c]{Neural Functional Units \\ succeeding to DianNao \cite{DBLP:journals/cacm/ChenCXST16}}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Nvidia \\ A100 GPU \cite{DBLP:journals/micro/ChoquetteGGSK21}} &
+        \makecell[c]{SIMT} &
+        \makecell[c]{GPU memory hierarchy w/ \\ Tensor Core register files} &
+        \makecell[c]{16 Dot Product units operated by \\ one warp w/ an MMA instruction \cite{DBLP:journals/corr/abs-1804-06826}}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Baidu \\ Kunlun K200 \cite{DBLP:conf/isscc/OuyangDML21}} &
+        \makecell[c]{SIMD} &
+        \makecell[c]{Separate buffers for inputs, and \\ outputs after activation units} &
+        \makecell[c]{A MAC array w/ \\ activation \& element-wise units}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Huawei \\ Ascend \cite{DBLP:conf/hotchips/LiaoTXZ19}} &
+        \makecell[c]{SIMD} &
+        \makecell[c]{Separate L1, L0 buffers for Cube \\ Unit, Unified Buffer for others} &
+        \makecell[c]{Cube Unit based on 16 $\times$ 16 \\ tree-like MACs}
+        \\
+    
+        \bottomrule[1pt]
+        \end{tabular}
+    }
+    
+    \end{center}
+    \end{table}
 
-Hip joint disability (HJD) is a common health threat in modern society. Its main causes are generally arthritis-attributed, including osteoarthritis, rheumatoid arthritis and the traumatic arthritis~\cite{foran2015total}. HJD seriously affects the walking and standing capability of patients, causing additional cost of treatment. During 2010 to 2012, the prevalence of arthritis was 52.5 million and the prevalence of arthritis-attributable activity limitation is 22.7 million in US~\cite{barbour2013prevalence}. These two indices are predicted to be 78.4 million and 34.6 million in 2040~\cite{hootman2016updated}.\\
+AI applications have expanded rapidly in various domains, e.g., natural language generation with GPT-4 \cite{DBLP:journals/corr/abs-2303-08774}, image generation with Midjourney \cite{DBLP:conf/mindtrek/Oppenlaender22a}. The AI applications heavily rely on matrix multiplications, which demand massive computation power. To meet this challenge, hardware manufacturers have developed specialized AI processors. As shown in Table \ref{tab:sec_1_1_table_1}, we list the single-core details of several popular AI processors. While GPU manufacturers like Nvidia or Qualcomm utilize Single Instruction Multiple Threads (SIMT) to extend their mature GPU architectures, other AI processor manufacturers design each AI Core based on SIMD. Compared with the SIMT execution model, the SIMD model saves the power consumption, reduces the hardware scale, but loses programming flexibility. The memory hierarchy is generally divided into shared and separate memories. The shared memories aim to decrease the data transfer costs among hardware units, and the separate memories feature different bandwidths and sizes for specific usages. The designs of the AI acceleration units also vary a lot. AI processors like Nvidia GPUs need a warp of 16 threads to execute one Tensor Core. Meanwhile, AI processors like Baidu Kunlun claim to equip a single-thread-driven MAC array. Google TPUs are built on a 256 $\times$ 256 systolic array, which requires a pipeline heating time and causes significant latency.
 
-\subsection{Total Arthroplasty Replacement}
+\subsection{Huawei Ascend processors}
 
-Top hip arthroplasty (THA), also termed as total hip replacement, is a widely adopted surgical treatment method for patient with severe hip joint disability. The first step of the treatment process is to remove the diseased femur head and cancellous bone tissue inside the femur neck. An artificial femur implant is then inserted into the femur neck as a replacement of femur head, acting as the load bearing structure between femur shaft and pelvis. Femur implant for THA treatment is usually made of the pure titanium alloy. Among common commercial materials used for medical devices, titanium has the best bio-compatability, which stimulates the bone growth after surgery~\cite{olivares2015implant}. THA is now widely accepted by HJD patients. In year 2014 and 2018, the number of THA clinical application cases performed in Canada raised from 49,819 to 58,492, indicating a 17.4\% increment~\cite{canadian2019hip}.\\
+The Huawei Ascend architecture draws on the strengths of others with its improvements based on the SIMD execution with a powerful Cube Unit. The DaVinci Core of Huawei Ascend processors has several separate memory buffers supporting the Cube Unit and a shared Unified Buffer for other units. Multiple hardware components constitute DaVinci Core, including compute units, storage units, and control units, as shown in Fig. \ref{fig:dav} (a). Each Ascend 310 processor has two DaVinci Core, sharing a 512-bits Interconnect Bus.
 
-Nevertheless, THA is meanwhile criticized for its high revision surgery rate. During 1979 to 1998, 20\% of 10,000 Norway THA patients were required to take revision surgery within one year after THA surgery~\cite{malchau2000update}. In 2018, the revision surgery rate in Canada is 8.2\%, implying 4,822 revision treatment and \$89 million extra inpatient cost on healthcare system~\cite{canadian2019hip}. The major cause for THA failure is aseptic loosening, occupying a 75.7\% share in Norway during 1979 to 1998~\cite{malchau2000update}.\\
+\begin{figure}[tb]
+    \centering{\includegraphics[scale=0.18]{figures/Ascend.png}}
+    \caption{Overall Ascend 310 Structure. (a) Ascend 310 Processor with Two DaVinci Cores, (b) Logic Diagram of DaVinci Storage Units and Data Path Control, (c) 16 $\times$ 16 Cube Unit structure, (d) Tree-like Multiplier-Accumulator Structure (from \cite{DBLP:conf/hotchips/LiaoTXZ19})}
+    \label{fig:dav}
+    \end{figure}
 
-Studies reveal that the loosening of implant results from stiffness incompatibility between titanium alloy and femur bone tissue. The stiffness of Ti$_6$Al$_4$V (approx. 119 GPa~\cite{bandyopadhyay2010influence}) is nine times higher than the stiffness of cortical bone (approx. 12 GPa~\cite{wirtz2000critical}). The femur implant with stronger stiffness concentrates more body loading, leading to reduce stress in femur bone tissue surrounding the implant. According to Wolff's law, stress in bone tissue acts as bone growth stimuli~\cite{wolff1893gesetz}. As a consequence, the deterioration risk at femur neck and shaft increases after THA treatment. Currently, stress shielding has been regarded as an important cause to postoperative femur bone degeneration~\cite{head1995titanium}.\\
+The compute units include the Scalar Unit, Vector Unit, and Cube Unit. The Scalar Unit does mostly address calculations or condition branch analyses. The Vector Unit supports vectorized arithmetic or logical computations, including data preprocessing and activations. The Cube Unit is the essence of the DaVinci Core, improving the computation power of the matrix multiplications. A Cube Unit consists of 4096 FP16 MACs and 8192 INT8 MACs, forming $16 \times 16$ tree-like multiplier-accumulators, as shown in Fig. \ref{fig:dav} (c) (d). Each matrix multiplication is broken into multiple basic units of $16 \times 16 \times 16$ matrix multiplications. The accumulator behind the Cube Unit accumulates the intermediate results in the L0C Buffer.
 
-\subsection{Low back pain}
+The storage units refer to external storage, internal storage, and memory transfer units. The external storage includes L2 Buffer, DDR, and other storage devices accessed by the bus. The internal storage includes five memory buffers (L1, L0A, L0B, L0C, Unified Buffer) and registers. The Memory Transfer Engines (MTEs) control the data paths, which connect the internal storage buffers and transfer the data. The three MTEs (MTE1, MTE2, and MTE3) are tasked with the distinct data paths independently, as shown in Fig. \ref{fig:dav} (b). The five buffers and registers have different capacities and bandwidths, filling the gap between the low bandwidth and the high compute speed. 
+    
+The control units contain System Control, Scalar Program Scheduling Queue (PSQ), Instruction Dispatch, instruction queues (Cube Queue, Vector Queue, and three MTE Queues), and Event Synchronization. The Scalar PSQ receives and decodes the executing instructions from the Instruction Cache. After decoding, the Instruction Dispatch transmits the instructions to the queues separately. The Event Synchronization handles the data dependency among the units to ensure the correctness of execution orders, mainly a binary semaphore mechanism with eight registers. 
 
-Low back pain (LBP) is a common health threat in modern society. In 2000, its wold-wide life time prevalence is estimated to be 38.9\%~\cite{hoy2012systematic}. In developed countries with large amount of aging population, this number can be 60\% to 80\%~\cite{vos2012years}. Statistics show that the annual prevalence of LBP is significantly higher in women (35.3\%) than in men (29.4\%)~\cite{hoy2012systematic}, while high-income individuals (32.9\%) are more likely to suffer from the disease than middle-income (25.0\%) and low-income individuals (16.7\%)~\cite{hoy2012systematic}. Notably, intractable LBP demonstrates a strong age correlation. As shown in Figure 1, the 60-to-69-year-old age group was most likely to suffer from LBP ~\cite{hoy2012systematic}. Overall, middle-aged and older adults (30 to 89 years) have a higher risk of developing the condition than adolescents (10 to 29 years)~\cite{hoy2012systematic}~\cite{taimela1997prevalence}~\cite{manchikanti2009comprehensive}.\\
+\subsection{Dissection and Optimization on AI processors}
 
-Currently, the vast majority of intractable LBP is triggered by abnormalities in the lumbar discs. Data show that 39\% of cases are non-displaced discogenic LBP, which is the major cause of this disease. Another 30\% of LBP cases was caused by lumbar disc herniation~\cite{grabovac2019association}. Other non-mainstream causes include lumbar foraminal stenosis, lumbar degenerative instability, lumbar degenerative dislocation, lumbar degenerative scoliosis, and small joint syndrome, etc~\cite{makris2017physical}.\\
+With the growth of the AI processors, researchers paid high interest in this novel hardware with a lot of work in different areas. Similar to the previous works on regular GPUs \cite{DBLP:conf/ppopp/ZhangTXLZC17}, researchers have launched dissection works on the AI processors, e.g., the architecture of the Tensor Cores \cite{DBLP:journals/corr/abs-1804-06826}. Therefore, based on these dissections, some studies have been working on performance modeling on the AI processors. Their models can be divided into two categories: white-box hardware model \cite{DBLP:conf/ispass/RaihanGA19} and black-box statistics model \cite{DBLP:conf/nips/ChenZYJMCGK18, DBLP:journals/corr/abs-2008-01040}. The white-box hardware model requires a deep understanding of the hardware, which makes the model explainable but usually not general. Meanwhile, the black-box statistics model requires no hardware details but large scales of previous execution records for model training. 
 
-For patients, persistent LBP poses a long-term physical, psychological, and financial burden. About 17\% LBP patients lose their working ability~\cite{hoy2012systematic}. Some patients cannot complete daily activities such as stairs-climbing and clothing~\cite{casazza2012diagnosis}. A significant number of patients are alienated from family, friends, and society due to mobility problems, which resulting to negative emotions~\cite{kim2019expenditures}. More than 31\% of patients undergo continuous treatment for six months before the the complete elimination of back discomfort, but between 25\% and 62\% of patients have a relapse within two years~\cite{pinheiro2015advanced}. At the societal level, the large population of patients with lower back pain adds loads to the health care system and causes financial losses. In the United States, according to statistics for the decade 2007-2016, the average patient spent \$676 (without surgery) or \$17,640 (with surgery) for treatment within one year after diagnosis~\cite{wolfe1995prevalence}. The nation-level total cost is \$2.1 billion~\cite{wolfe1995prevalence}. Also, the loss of work productivity due to the inability of adult patients should be regarded as another economic loss~\cite{guo1999back}. This loss in UK and US are 100 million~\cite{zhang2009clinical} and 150 million~\cite{herkowitz2011rothman} capita working days respectively.
-
-\subsection{Lumbar interbody fusion}
-
-As a popular treatment method, lumbar interbody fusion (LIF) retains the load bearing ability of necrotic functional spine unit (FSU). Firstly, the degenerated intervertebral disc is removed and the vertebra endplates are polished. Afterwards, a spinal cage is placed between vertebrae. It transfers loading through the spine and stimulates bone tissue at endplate surfaces. In long term, the two vertebrae merge and no relative displacement between them happens, so as to avoid potential neurothlipsis on cord~\cite{mobbs2015lumbar}~\cite{yavin2017lumbar}.\\
-
-LIF can be further classified into anterior approach fusion, posterior approach fusion, transforaminal approach fusion, and extreme lateral approach fusion [16]. Among these categories, transforaminal approach fusion can avoid most of the organs, muscles and nerves in the surgical path~\cite{mobbs2015lumbar}. Compared with the posterior approach fusion, it has a better clinical performance because it causes less damage to the spinous and transverse structures and is preferred by the treating patients~\cite{mobbs2015lumbar}. Compared to conservative treatment methods, LIF shortens the length of hospital stay~\cite{mobbs2015lumbar}. In the United States, from 2000 to 2009, the number of fusions performed per million people doubled from 75 to 178, reflecting its enhancing market acceptance, despite an increase in average cost from \$25,000 to \$82,000~\cite{yavin2017lumbar}.\\
-
-Conventional spinal cage fully made of metallic material is criticized for its high failure risk. More than 20\% of LBP patients undergo at least one revision surgery within eight years since their primary LIF surgery~\cite{abdu2018long}. The main cause of revision surgery is the stiffness incompatibility between bone tissue and cage. Most orthopedic devices are manufactured with stiff metallic materials such as Ti$_6$Al$_4$V (approx. 119 GPa), cobalt-chromium alloy (approx. 53 GPa) and stainless steel (approx. 51 GPa), which are much stiffer than both cortical bone (approx. 15 GPa) and cancellous bone (approx. 4 GPa)~\cite{warburton2020biomaterials}. Different to rubber-like spinal disc, metallic cages with low deformation flexibility can hardly redistribute reaction force among endplate surfaces. Besides, the pre-designed cage interior structure is not customized for the actual physique condition of individual patients, which further contributes to the stress variation in post-operative lumbar vertebrae~\cite{reid2019state}~\cite{jain2016advances}. According to Wolff's law, lack of stress stimuli leads to bone tissue degeneration~\cite{wolff1893gesetz}. The unexpected stress reduction in vertebrae can cause adverse events including pseudarthrosis, segment degeneration and implant failure~\cite{williams2005ct}~\cite{pimenta2012biomechanics}~\cite{pichelmann2010revision}.\\
-
-\subsection{Lattice structures}
-
-As a representative meta-material, porous structures refer to artificial materials with self-compacting interior structures and exhibit mechanical properties unavailable in nature. Porous materials include two categories: cellular materials and lattice materials. Foam materials (Figure 4a) contain randomly arranged closed cavity units. Compared with conventional materials, foams show outstanding capability in kinetic energy absorption and thermal isolation~\cite{elmarakbi2013advanced} and are therefore widely used in the production of automotive/marine buffers and in the interior filling of building structures~\cite{mazur2017mechanical}. Currently, most of the foams are manufactured by chemical bubbling or soluble aggregates~\cite{fleck2004overview}, which is cost-competitive but do not allow precise control of the mechanical property distribution at the macroscopic level.\\
-
-Different to cellular materials, lattice materials (Figure 4b and Figure 4c) are designed with aspiration from the arrangement of atoms in the crystal. At the microscopic scale, they often exhibit a short beam or truss-like configuration, while the cavities inside the cells are connected to each other and to the outside. By controlling the microstructure and porosity, designers can achieve their desired mechanical properties (stiffness / Poisson's ratio, etc.) in macroscopic level. Besides, the graded-density characteristic of lattice material allows the application of other meta-material design concepts, such as stretchable origami structures, to provide controlled large deformation capabilities~\cite{bobbert2018towards}. Nowadays, great progress has been made in the bistable design~\cite{jianguo2014morphology}~\cite{jianguo2015bistable} and foldable analysis~\cite{cai2016deployment}~\cite{cai2016motion}~\cite{cai2017deployment} of origami materials.\\
-
-\subsection{Additive manufacturing}
-
-Traditional industrial manufacturing techniques (e.g. casting, forging) require fixed product design. Temporary configuration adjustments could be expensive. As an advanced high-precision manufacturing technology, additive manufacturing (AM) provides higher flexibility for the design and manufacture of industrial products. Generally, AM builds products by printing material particles layer by layer with micrometer accuracy~\cite{calignano2017overview}. The entire manufacturing process is highly automated, enabling direct transition from 3D model configuration design files to final products. This characteristic makes AM particularly suitable for the low-cost rapid mass fabrication of structural products with complex~\cite{mahmoud2017lattice} and customized configurations~\cite{gupta2015recent}. Currently, AM has been widely used in aerospace and mechanical~\cite{liu2017aerospace}\\
+In addition, more works focus on the optimization of the AI processors. At the level of the applications, studies focus on optimizing the original tasks of the AI processors, including the matrix multiplications \cite{DBLP:conf/ipps/00020C20} or the convolutions \cite{DBLP:conf/ppopp/YanWC20}. Other studies aim to extend the AI processors' computation power to more applications instead of deep learning only, including the Density-Based Spatial Clustering of Applications with Noise (DBSCAN) algorithm \cite{DBLP:conf/icpp/JiW21}, the basic operations of reduction and scan \cite{DBLP:conf/sccc/CarrascoVN18, DBLP:conf/ics/DakkakLXGH19}, skinny matrix multiplications \cite{DBLP:conf/ic-nc/TangK0K20}. Some other work even proposes next-generation AI processors, whose matrix MACs do general computations more than matrix multiplications \cite{10.1145/3470496.3527411}.
 
 \section{Motivations}
 \label{intro_moti}
