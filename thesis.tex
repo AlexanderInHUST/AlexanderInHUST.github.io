@@ -79,7 +79,7 @@ In addition to the performance model, we also provide two major optimization app
 
 \newpage
 \thispagestyle{empty}
-~\\
+~
 %=============================================================================
 
 
@@ -186,14 +186,14 @@ Therefore, considering the specific hardware features, we propose two major appr
 \section{Background}
 \label{sec_1_1_background}
 
-\subsection{AI processors}
+\subsection{AI Processors}
 
 \begin{table}[tbp]
     \caption{Specifications of current popular AI processors}
     \label{tab:sec_1_1_table_1}
     \begin{center}
     
-    \scalebox{0.69}{
+    \scalebox{0.7}{
         \begin{tabular}{c|c|c|c}
         \toprule[1pt]
             \textbf{AI Processor} &
@@ -250,14 +250,14 @@ Therefore, considering the specific hardware features, we propose two major appr
     \end{center}
     \end{table}
 
-AI applications have expanded rapidly in various domains, e.g., natural language generation with GPT-4 \cite{DBLP:journals/corr/abs-2303-08774}, image generation with Midjourney \cite{DBLP:conf/mindtrek/Oppenlaender22a}. The AI applications heavily rely on matrix multiplications, which demand massive computation power. To meet this challenge, hardware manufacturers have developed specialized AI processors. As shown in Table \ref{tab:sec_1_1_table_1}, we list the single-core details of several popular AI processors. While GPU manufacturers like Nvidia or Qualcomm utilize Single Instruction Multiple Threads (SIMT) to extend their mature GPU architectures, other AI processor manufacturers design each AI Core based on SIMD. Compared with the SIMT execution model, the SIMD model saves the power consumption, reduces the hardware scale, but loses programming flexibility. The memory hierarchy is generally divided into shared and separate memories. The shared memories aim to decrease the data transfer costs among hardware units, and the separate memories feature different bandwidths and sizes for specific usages. The designs of the AI acceleration units also vary a lot. AI processors like Nvidia GPUs need a warp of 16 threads to execute one Tensor Core. Meanwhile, AI processors like Baidu Kunlun claim to equip a single-thread-driven MAC array. Google TPUs are built on a 256 $\times$ 256 systolic array, which requires a pipeline heating time and causes significant latency.
+AI applications have expanded rapidly in various domains, e.g., natural language generation with GPT-3 \cite{DBLP:conf/nips/BrownMRSKDNSSAA20}, GPT-4 \cite{DBLP:journals/corr/abs-2303-08774}, Llama 2 \cite{DBLP:journals/corr/abs-2307-09288} and image generation with Stable Diffusion \cite{DBLP:conf/cvpr/RombachBLEO22}, Midjourney \cite{DBLP:conf/mindtrek/Oppenlaender22a}, DALL·E 3 \cite{DALLE}. Beneath the fantastic performance of those applications, AI applications heavily rely on elementary matrix multiplications, which demand massive computation power. To meet this challenge, hardware manufacturers have developed AI processors that equip specialized AI acceleration units for matrix multiplications. As shown in Table \ref{tab:sec_1_1_table_1}, we list the single-core details of several popular AI processors. While GPU manufacturers like Nvidia or Qualcomm utilize Single Instruction Multiple Threads (SIMT) to extend their mature GPU architectures, other AI processor manufacturers design each AI Core based on SIMD. Compared with the SIMT execution model, the SIMD model saves power consumption and reduces the hardware scale but loses programming flexibility. The memory hierarchy is generally divided into shared and separate memories. The shared memories aim to decrease the data transfer costs among hardware units, and the separate memories feature different bandwidths and sizes for specific usages. The designs of the AI acceleration units also vary a lot. AI processors like Nvidia GPUs need a warp of 16 threads to execute one Tensor Core. Meanwhile, AI processors like Baidu Kunlun claim to equip a single-thread-driven MAC array. Google TPUs are built on a 256 $\times$ 256 systolic array, which requires a pipeline heating time and causes significant latency. For simplicity, we use the term \textit{matrix MACs} for all the AI acceleration units in this thesis.
 
-\subsection{Huawei Ascend processors}
+\subsection{Huawei Ascend Processors}
 
-The Huawei Ascend architecture draws on the strengths of others with its improvements based on the SIMD execution with a powerful Cube Unit. The DaVinci Core of Huawei Ascend processors has several separate memory buffers supporting the Cube Unit and a shared Unified Buffer for other units. Multiple hardware components constitute DaVinci Core, including compute units, storage units, and control units, as shown in Fig. \ref{fig:dav} (a). Each Ascend 310 processor has two DaVinci Core, sharing a 512-bits Interconnect Bus.
+The Huawei Ascend architecture draws on the strengths of others with its improvements based on the SIMD execution with a powerful Cube Unit, the matrix MAC. The DaVinci Core of Huawei Ascend processors has several separate memory buffers supporting the Cube Unit and a shared Unified Buffer for other units. Multiple hardware components constitute DaVinci Core, including compute units, storage units, and control units, as shown in Fig. \ref{fig:dav} (a). Each Ascend 310 processor has two DaVinci Core, sharing a 512-bits Interconnect Bus.
 
 \begin{figure}[tb]
-    \centering{\includegraphics[scale=0.18]{figures/Ascend.png}}
+    \centering{\includegraphics[scale=0.19]{figures/Ascend.png}}
     \caption{Overall Ascend 310 Structure. (a) Ascend 310 Processor with Two DaVinci Cores, (b) Logic Diagram of DaVinci Storage Units and Data Path Control, (c) 16 $\times$ 16 Cube Unit structure, (d) Tree-like Multiplier-Accumulator Structure (from \cite{DBLP:conf/hotchips/LiaoTXZ19})}
     \label{fig:dav}
     \end{figure}
@@ -269,64 +269,121 @@ The storage units refer to external storage, internal storage, and memory transf
 The control units contain System Control, Scalar Program Scheduling Queue (PSQ), Instruction Dispatch, instruction queues (Cube Queue, Vector Queue, and three MTE Queues), and Event Synchronization. The Scalar PSQ receives and decodes the executing instructions from the Instruction Cache. After decoding, the Instruction Dispatch transmits the instructions to the queues separately. The Event Synchronization handles the data dependency among the units to ensure the correctness of execution orders, mainly a binary semaphore mechanism with eight registers. 
 
 \subsection{Dissection and Optimization on AI processors}
+\label{Sec:1_1_3}
 
 With the growth of the AI processors, researchers paid high interest in this novel hardware with a lot of work in different areas. Similar to the previous works on regular GPUs \cite{DBLP:conf/ppopp/ZhangTXLZC17}, researchers have launched dissection works on the AI processors, e.g., the architecture of the Tensor Cores \cite{DBLP:journals/corr/abs-1804-06826}. Therefore, based on these dissections, some studies have been working on performance modeling on the AI processors. Their models can be divided into two categories: white-box hardware model \cite{DBLP:conf/ispass/RaihanGA19} and black-box statistics model \cite{DBLP:conf/nips/ChenZYJMCGK18, DBLP:journals/corr/abs-2008-01040}. The white-box hardware model requires a deep understanding of the hardware, which makes the model explainable but usually not general. Meanwhile, the black-box statistics model requires no hardware details but large scales of previous execution records for model training. 
 
 In addition, more works focus on the optimization of the AI processors. At the level of the applications, studies focus on optimizing the original tasks of the AI processors, including the matrix multiplications \cite{DBLP:conf/ipps/00020C20} or the convolutions \cite{DBLP:conf/ppopp/YanWC20}. Other studies aim to extend the AI processors' computation power to more applications instead of deep learning only, including the Density-Based Spatial Clustering of Applications with Noise (DBSCAN) algorithm \cite{DBLP:conf/icpp/JiW21}, the basic operations of reduction and scan \cite{DBLP:conf/sccc/CarrascoVN18, DBLP:conf/ics/DakkakLXGH19}, skinny matrix multiplications \cite{DBLP:conf/ic-nc/TangK0K20}. Some other work even proposes next-generation AI processors, whose matrix MACs do general computations more than matrix multiplications \cite{10.1145/3470496.3527411}.
 
 \section{Motivations}
-\label{intro_moti}
+\label{sec_1_2_motivations}
 
-\subsection{Lattice microstructures and orthopedic devices}
+\subsection{Hidden Hardware Details of AI Processors}
 
-Lattice structures provide higher design flexibility to medical devices. By controlling strut configurations (i.e. thickness, position), mechanical properties of the lattice cell can be adjusted without change of basis material. Multiple studies verify the positive effect of lattice orthopedic devices on bone growth stimulation and stress shielding mitigation.\\
+Although hardware manufacturers have published various architectures of the AI processors, in addition to hardware parameters, the public and community are still unfamiliar with the hardware. One of the reasons is that most of those AI processors have no physical consumer-grade products but are only available on the cloud. Being affected by different sharing policies by virtual machines or containers, the benchmark performance cannot reflect the bare hardware performance as well as the details of the architecture. In addition, the toolchains of those AI processors are usually inadequate and only leave high-level abstraction APIs, primarily as operations in deep learning frameworks. Although the design allows the users to program without learning costs, it restricts them from analyzing the hardware and performing advanced hardware-ware optimization. Table \ref{tab:sec_1_2_table_1} reports the availability and API level of some popular AI processor manufacturers.
 
-Via fluorescence technique, the bone growth rate can be directly quantified in animal experiments. Results show that despite of configuration of lattice microstructures (e.g. triangle, hexagonal, rectangular), bone growth rate is positively related to implant local porosity~\cite{cheng2014additively}~\cite{van2012effect}~\cite{li2007bone}. On the one hand, porous microstructures mimic the real bone internal environment (70-90\% porosity) and helps stimulate skeletal cell division and differentiation~\cite{balla2010porous}. Besides, higher porosity results in rougher implant surfaces, enhancing friction on the implant-bone interface in the immediate postoperative period and hence preventing the implant dislocation after implantation~\cite{xue2007processing}. Finally, larger implant surface porosity means larger space inside implant domain, which provides sufficient space for cell ingrowth and attachment.\\
+\begin{table}[tbp]
+    \caption{Availability and API level of AI processor manufacturers}
+    \label{tab:sec_1_2_table_1}
+    \begin{center}
+    
+    \scalebox{0.85}{
+        \begin{tabular}{c|c|c}
+        \toprule[1pt]
+            \textbf{Manufacturer} &
+            \textbf{\makecell[c]{Public Availability}} &
+            \textbf{API Level} \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Qualcomm} &
+        \makecell[c]{Mobile SOC \cite{HDSP}} &
+        \makecell[c]{Operations in QNN \cite{QNN}}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Google} &
+        \makecell[c]{Cloud platforms \cite{DBLP:conf/isca/JouppiYPPABBBBB17}} & 
+        \makecell[c]{Operations in TensorFlow or \\ PyTorch XLA \cite{XLA}}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Cambricon} &
+        \makecell[c]{Cloud platforms \cite{DevP}} &
+        \makecell[c]{Low-level C \& assembly \cite{BANG}}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Nvidia} &
+        \makecell[c]{Physical cards \cite{ADA}} &
+        \makecell[c]{Low-level CUDA \& PTX \cite{PTX}}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Baidu} &
+        \makecell[c]{Internal usage} &
+        \makecell[c]{Applications in Baidu AI Cloud \cite{Pad}}
+        \\
+        \midrule[0.5pt]
+    
+        \makecell[c]{Huawei} &
+        \makecell[c]{Physical cards \cite{DBLP:conf/hotchips/LiaoTXZ19}} &
+        \makecell[c]{Low-level C \& assembly \cite{CANN}}
+        \\
+    
+        \bottomrule[1pt]
+        \end{tabular}
+    }
+    
+    \end{center}
+    \end{table}
 
-Tracking record of human total hip replacement clinical cases shows that higher implant porosity sufficiently moderates severity of stress shielding in femur bone~\cite{khanoki2013fatigue}~\cite{arabnejad2012multiscale}~\cite{wang2018hip}~\cite{arabnejad2017fully}. Different to fulfilled solid implants, implants with lattice interior structures can transfer bone-implant interface pressure from high-pressure zones to low-pressure zones, so that to achieve a more uniform stress distribution in femur head and shaft~\cite{wang2018hip}~\cite{arabnejad2017fully}.\\
+Because of the restrictions above, in addition to the Nvidia GPUs, the hardware details of other AI processors are still hidden from the community. Therefore, the optimization works on the Nvidia GPUs \cite{DBLP:journals/corr/abs-1804-06826, DBLP:conf/ppopp/ZhangTXLZC17, DBLP:conf/ics/ZhouTZWS17, DBLP:conf/ispass/RaihanGA19, DBLP:conf/pldi/HongSKRKPRS18, DBLP:conf/cgo/ZhouMSM21} are significantly more than those on other AI processors. For hardware-aware algorithm optimizations on the AI processors, this thesis first performs a comprehensive dissection with various benchmarks on the AI processors.
 
-\subsection{Optimization design and orthopedic devices}
+\subsection{Inefficient Hardware Units on AI Processors}
 
-Integrated with finite element analysis method, topology optimization (TO) design has been widely applied in precious design of stress bearing structures. In building structure design field, SIMP algorithm is used to re-allocate the material distribution in tubular joint so as to avoid stress concentration nearby welding points~\cite{huang2021integrated}.\\
+\begin{figure}[tbp]
+    \centering{\includegraphics[scale=0.7]{figures/background_data.png}}
+    \caption{The benchmark results on Huawei Ascend 310 AI processors}
+    \label{fig:benchmark}
+    \end{figure}
 
-In femoral implant design field, parameterized level set method (LSM) was used to customize the structure of total femur prosthesis~\cite{deng2015topology}. The modified LSM with Boolean R-function not only achieved enhanced prosthesis stiffness with lower material usage, but also took the cartilage surface wear and erosion as optimization consideration. Similar optimization method has been practiced in femur implant design. Niroomand and Boroomand applied SIMP to simplify femur and implant model. By changing the shape of the implant, they achieved more uniformly distributed von Mises stress in the optimization domain with 16\% reduction in material consumption~\cite{niroomand2018application}. With the same volume fraction reduction, Munteanu et al. further reduced the maximum stress in implant by 27\% and showed the feasibility of additive manufacturing of the optimized implant sample~\cite{munteanu2019additively}.\\
+As independent processors, in addition to the Matrix MACs, the AI processors are equipped with other units for necessary operations, including instruction dispatching or vectorized computation. In addition, complete applications also consist of many of these operations, which sometimes occupy a significant part of execution. However, designers usually prefer assigning more hardware resources to enhance the performance of the matrix multiplications, leaving other units weakly supported \cite{DBLP:conf/icpp/JiW21, DBLP:conf/hotchips/LiaoTXZ19, DBLP:conf/isca/LiuDTHLXCC16, DBLP:conf/isca/JouppiYPPABBBBB17, cambricon, CANN, jax}. 
 
-By adopting lattice microstructures in femoral implant, the optimization design efficiency is further enhanced. By controlling lattice strut thickness, local mechanical property can be adjusted without change of material. As a proof-of-concept research, Arabnejad and Pasini in 2012 conducted multi-scale and multi-objective optimization design on 2D graded-density titanium hip implant using NSGA-II algorithm~\cite{khanoki2012multiscale}. The optimized graded-density implant reduced 45\% resorbed bone mass and 23\% maximum interface failure index compared to uniform-density implant. This design concept is then extended to 3D hip implants~\cite{arabnejad2017fully}~\cite{wang2018hip}. Besides relatively density, unit cell morphology also affects implantation performance. In 2016, Arabnejad et al. fabricated eight titanium alloy unit cell samples in four different relative density and two cell morphologies~\cite{arabnejad2016high}. Compression tests and animal (canine) experiments show differentiated against both design variables.\\
+On the Huawei Ascend 310 AI processor, we offer an instruction-level benchmark, where we duplicate the operations and fit the execution time with the least square method. Fig. \ref{fig:benchmark} shows that a scalar single-operand conditional branch takes an average of 1.48$\times$ longer than \verb|ReLU|, 1.69$\times$ longer than \verb|vecDup|, 1.60$\times$ longer than \verb|reduceMin| on 128 elements in parallel. An immediate assignment to on-core memory takes 0.94$\times$ of \verb|ReLU|, where \verb|ReLU| consists of data reading, computation, and data writing. The vectorized comparisons \& selections take 1.90$\times$ and 1.93$\times$ than \verb|ReLU| respectively, showing lower performance. The hardware features restrict the implementation of classical algorithms from other platforms. Even after successful migrations, the algorithms could face heavy performance loss.
 
-The concepts of finite element simulation and topology optimization have also been applied to the design of intervertebral fusion devices. In earlier studies, the configuration~\cite{zhong2006finite} and wall thickness~\cite{schnitzer2020comparison} of the cage are optimized to save material usage, enhance spinal stability and moderate stress shielding. Cage samples are additive manufactured via selective laser melting method using Ti$_6$Al$_4$V basis material for verification experiments~\cite{schnitzer2020comparison}. Bashkuev in 2015 introduced lattice microstructure in cage design and used mechano-regulation algorithm to evaluate its influence on bone growth stimulation, providing precious reference information on cage surface porosity control~\cite{bashkuev2015computational}. Chen in 2021 evaluated the biomechanical responses of PEEK cage with different global porosities, revealing that increment in porosity reduces endplate surface pressure and avoids cage subsidence and migration~\cite{chen2021computational}. In the same year, Pan further proposed the design idea of partitioned spinal cage~\cite{pan2021design}. His team divided the cage into multiple parts with different relative densities, thereby controlling the local stiffness of the fusion device more precisely and making it more similar to the mechanical characteristics of human bone.\\
+\subsection{Low Usage Rate of Matrix MACs}
 
-\subsection{Current shortcomings}
+Since the matrix MACs of the AI processors compute matrix multiplications only, most algorithms or applications cannot utilize the high-performance matrix MACs. Even for the matrix multiplication itself, the usage rate of the matrix MACs is far lower than expected. Fig. \ref{fig:low_usage} illustrates the hardware unit usage rates of a standard matrix multiplication implementation on the Huawei Ascend 310 processors. The results show that the IO units report significantly higher usage rates than the matrix MACs, even when the IO part of the matrix multiplication is $O(n^2)$ and the core matrix multiplication is $O(n^3)$.
 
-Albeit lattice orthopedic devices have been utilized in clinical treatment, in current stage, there are still significant deficiencies in their interior configuration design.\\
+\begin{figure}[tbp]
+    \centering{\includegraphics[scale=0.7]{figures/low_usage.png}}
+    \caption{Unit Usage Rates of Matrix Multiplications $S \times S \times S$ on Huawei Ascend 310 AI processors}
+    \label{fig:low_usage}
+    \end{figure}
 
-\begin{enumerate}
-
-\item {\bf The versatility of microstructure configuration is limited.} Most of current studies only focus on the relative density variation of isotropic lattice unit cells and the resulting change in mechanical properties. The influence of microstructure architecture itself is rarely discussed. As one of the only few examples, Xu et al. created anisotropic lattice unit cells by adjustment of material allocation on unit cell structs on different directions~\cite{xu2016design}, making it feasible to assemble vertically strengthened femur implant to match the actual stiffness condition in femur bone~\cite{painkra2018anisotropic}. However, the real-time computation of anisotropic lattice unit cell mechanical property is time-consuming with common homogenization methods~\cite{dong2019149}. Some analytical mechanical property models are proposed but are only applicable to certain cell configurations~\cite{xu2016design}. Therefore, an universal mechanical property prediction model for different lattice unit cell structures is desired.\\
-
-\item {\bf Optimization design methodologies for orthopedic devices, especially for spine fusion devices, lack for exploration.} Most existing studies do not discuss the correlation between target functions and stress shielding severity, making the algorithm difficult to make accurate response to the actual stress condition inside critical bone tissues and finally dragging down the efficiency of optimization design. Considering the 
-significant differences between patient physiques, in-depth discussion should be made on optimization algorithm design against different medical case scenario (e.g. THA / LIF) and physique conditions (e.g. hunchback / spinal scoliosis)~\cite{ezquerro2004combination}.\\
-
-\end{enumerate}
+As discussed in Sec. \ref{Sec:1_1_3}, researchers have been working on the programmability of the AI processors. The primary idea for their work is to adapt the classical algorithms for matrix MACs, which also aims to improve the usage rates of the matrix MACs.
 
 \section{Main contributions}
-\label{intro_cont}
+\label{sec_1_3_contributions}
 
-\subsection{Data-driven lattice microstructure homogenization}
+\subsection{Performance Modeling on Huawei Ascend}
 
-A mechanical property prediction model for orthotropic lattice unit cells with arbitrary anisotropy is established based on Gaussian process (GP) machine learning method. The model is established from a pre-prepared training dataset. Training cases in the dataset can be flexibly replaced or appended to make it applicable to other lattice unit cell configurations. For an arbitrary lattice unit cell, the GP model provides immediate prediction for its stiffness modulus and failure parameters, fitting the timing requirement of topology optimization.\\
+We first demystify the Huawei Ascend 310 with micro-benchmarks to show the characteristics of the hardware units on DaVinci Core, the AI Core of the Huawei Ascend processor. We pay the most attention to the IO units, which play the most critical role and influence the execution time, as shown in Fig. \ref{fig:low_usage}. We reveal how MTE Units control and compete for the data paths that connect the different separate memories. In addition to the contention ratio benchmark on bandwidth sharing, we design specially-crafted benchmarks to identify the source, which is asserted to be the Interconnect Bus, and the runtime behaviors of the bus contention.
 
-\subsection{Efficient optimization design framework}
+Then, we propose a discrete-event-based performance model, \textbf{Verrocchio}. Verrocchio models a series of architectural features that are most important and determinant for the DaVinci Core performance, including bandwidth contentions and concurrent hardware unit execution with synchronization. The evaluation results show that Verrocchio achieves an average error rate of $2.62\%$ and $2.30\%$ for the single-core and double-core execution of several sample kernels. We demonstrate the use of Verrocchio in optimizing a matrix multiplication algorithm. Verrocchio enables a search space exploration in tiling size selection and achieves a speedup of 1.70$\times$ at the operator level and 1.53$\times$ at the application level compared with CANN \cite{CANN} native operators with prediction error rates of $5.06\%$ and $5.25\%$ for the single-core and double-core execution.
 
-Different topology optimization frameworks are established with customized algorithm kernel for interior lattice microstructure design of different orthopedic devices. For femoral implant, a gradient-based iterative algorithm is established based on method of moving asymptotes (MMA). Design variables include the anisotropy pattern (material amount allocated along three orthotropic coordinate directions) of each unit cells in the optimization domain of the femoral implant. For spinal cages, the algorithm is specifically design for different loading conditions, including normal, flexion, extension and bending situations. The spinal cage optimization domain is divided into several tessellated triangular columns linking the upper and lower vertebral endplates. The relative density of each column is controlled to provide suitable reaction forces towards pressure among vertebral endplate plane, so that achieve the re-distribution of stress inside vertebrae bone tissue. Both optimization frameworks considers clinical and manufacturing constraint conditions.  Efficacy of the algorithms are verified by biomedical bone resorption indicators.\\
+\subsection{1) Replacing the Worst Operations}
 
-\subsection{Automated lattice configuration reconstruction}
+\textbf{SelB-\textit{k}-NN} (\textbf{Sel}ection-\textbf{B}itonic-\textbf{\textit{k}}-\textbf{NN}) is a mini-batch \textit{k}-NN for the powerful AI processors. For a single batch, SelB-\textit{k}-NN includes a naturally-accelerated distance computation and a non-trivial \textit{k}-selection. For the \textit{k}-selection, inspired by the selection sort, SelB-\textit{k}-NN compares the minimized value of the distance computation results with the first element of the min-\textit{k} result array, maintained by the bitonic 1-selection \cite{DBLP:conf/sigmod/ShanbhagPM18}. Compared with the previous approaches, SelB-\textit{k}-NN limits the increment of the weakly-supported scalar operations, vectorized comparisons \& selections. Since the architectures and instruction sets of the AI processors vary among manufacturers, we propose two algorithms to minimize the hardware support requirements for better portability. As a result, only \verb|vecDup|, \verb|ReLU|, and \verb|reduceMin| (\verb|reduceMax|) with no indexing are sufficient, which contribute to the most significant and necessary operators on most AI processors. For all mini-batches, an early exit policy dynamically reduces most of the \textit{k}-selection workloads, which our quantification shows shrink in an inverse proportion. We model the tiling shape selection to an optimization problem, considering the overall performance of SelB-\textit{k}-NN. In addition, we propose an offline pruning method working during preprocessing to reduce the optimization problem's search space.
 
-Optimization results obtained from design frameworks include radius or relative density distribution among unit cells inside orthopedic devices. In order to convert the design variables into device prototypes, a remodeling framework is created to generate printable geometric files fitting requirement of additive manufacturing. The framework is executed on computer-aided-design software platform.\\
+\subsection{2) Transforming to Matrix Multiplications}
 
-\section{Thesis organization}
-\label{intro_orga}
+\textbf{Cube-}$\mathbf{f(x)}$ leverages the computational power of the Matrix MACs on AI processors to evaluate special functions with the Taylor polynomials. Cube-${f(x)}$ treats the building and computation of Taylor polynomials as specific cases of matrix multiplications, which are efficiently accelerated by the Matrix MACs. Cube-${f(x)}$ has two stages: preparation and computation. In the preparation stage, Cube-${f(x)}$ generates a variable sequence $(x^{k_0}, x^{k_1}, x^{k_2}, ...)$ as the variables of the Taylor polynomials. In the computation stage, Cube-${f(x)}$ evaluates multiple independent special functions by reusing the variable sequence generated by the preparation stage with different coefficients in parallel. Depending on different precision requirements, Cube-${f(x)}$ applies a required order of expansion to approximate the original functions. When given a low order requirement, Cube-${f(x)}$ achieves data parallelism with a novel technology named In-matrix Parallelism. By adjusting the inputs of the matrix multiplications, it merges multiple input vectors and computes within one matrix multiplication instruction. Since In-matrix Parallelism cannot always improve the efficiency of Cube-${f(x)}$, we formulate an optimization problem, which minimizes the algorithm execution time by searching for the best number of inputs being merged. Compared with previous approaches, Cube-${f(x)}$ significantly reduces the vector operations, which perform weakly on the AI processors, reuses the intermediate results, and migrates most of the computation to the Matrix MACs by doing special cases of matrix multiplications.
 
-The rest of this thesis consists of five functional parts (Chapter~\ref{gauss} to Chapter~\ref{concl}). Chapter~\ref{gauss} illustrates the establishment of GP-based mechanical property homogenization model for anisotropic lattice microstructures. The kernel structure, training dataset and performance evaluation of the GP model are included. Chapter~\ref{femur} introduces a trial of optimization design on lattice femoral implant with anisotropic graded-density microstructures. The details of finite element modelling and optimization framework set-up are explained. Chapter~\ref{spine} discusses the optimization design of graded-density isotropic lattice spinal cage with different clinical loading conditions. In Chapter~\ref{recon}, instructions are provided to convert topology optimization results to printable lattice device configuration models. Finally, in Chapter~\ref{concl}, a comprehensive summary is made on this thesis. Potential research works in the future are suggested based on current research process.\\
+\section{Thesis Organization}
+\label{sec_1_4_organization}
+
+TODO
 
 %========================================
 %========================================
