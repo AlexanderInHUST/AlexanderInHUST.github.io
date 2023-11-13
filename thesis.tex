@@ -416,12 +416,14 @@ Then, we propose a discrete-event-based performance model, \textbf{Verrocchio}. 
 \section{Thesis Organization}
 \label{sec_1_4_organization}
 
-TODO
+The rest of this thesis is organized as follows. Chapter 2 starts with demystifying and benchmarking the Huawei Ascend AI processors. Then, it introduces a performance model, Verrocchio, and gives complete evaluations for its accuracy. Chapter 3 discusses the first optimization approach, replacing the most inefficient operations with better ones. Chapter 4 discusses the second optimization approach, replacing the vectorized and scalar operations with specific matrix multiplications. Chapter 5 concludes this thesis and suggests possible future works.
 
 %========================================
 
 \chapter{Performance Modeling on Huawei Ascend}
 \label{sec_2}
+
+This chapter mainly introduces a performance model, Verrocchio, with complete benchmarking works. Sec. 2.1 gives an overview of the performance model. Sec. 2.2 reports the benchmark works in detail. Sec. 2.3 discusses the modeling work for both single- and multi-core situations. Sec. 2.4 evaluates the accuracy of the performance model and the acceleration with the help of the performance model in matrix multiplication optimization. Sec. 2.5 gives the conclusion.
 
 \section{Verrocchio, A Performance Model}
 \label{sec_2_1}
@@ -1083,14 +1085,16 @@ Currently, executing a DNN model on Ascend 310 processor needs an official ATC o
 
 Among all evaluation results, AlexNet shows the most significant speedup of 2.18$\times$. The reason is that AlexNet is one of the earliest Convolutional Neural Networks (CNNs) with large Fully Connected (FC) layers. It requires matrix multiplications of a large scale. As we show in the last subsection, the CANN operators perform worse than our operators on a large scale. Generally, the DNN applications report an average speedup of 1.53$\times$. Although YOLO V4 is a complex model, the matrix multiplication scales are not large, reporting the lowest acceleration rate of 1.15$\times$.
 
-\section{Conclusion and Future Work}
+\section{Conclusion}
 
-For the first time, we focus on building a performance model, Verrocchio, for Huawei DaVinci AI Cores. The DaVinci Core has complex data paths and distinct working details, which significantly influences the performance and brings a series of modeling challenges. Our discrete-event-based model reports high accuracy for various kernel programs but involves some system errors of the MTE Unit bandwidths, which are caused by the simplification of their runtime behaviors. In future work, we plan a deeper study with more benchmarks of the MTE Units, which aims to model the accurate bandwidth contentions.
+For the first time, we focus on building a performance model, Verrocchio, for Huawei DaVinci AI Cores. The DaVinci Core has complex data paths and distinct working details, which significantly influences the performance and brings a series of modeling challenges. Our discrete-event-based model reports high accuracy for various kernel programs but involves some system errors of the MTE Unit bandwidths, which are caused by the simplification of their runtime behaviors.
 
 %========================================
 
 \chapter{SelB-k-NN: Replacing the Worst Operations}
 \label{sec_3}
+
+In this chapter, we discuss the first optimization approach with the example of SelB-\textit{k}-NN. Sec 3.1 discusses the background and motivation of the algorithm. Sec 3.2 introduces the central part of the single-core SelB-\textit{k}-NN algorithm. Sec 3.3 proposes two significant methods to minimize the hardware support requirements of the algorithm. In Sec 3.4, we discuss how we can quantify and achieve the optimized tiling shapes for large datasets. Sec 3.5 evaluates the performance of SelB-\textit{k}-NN, and Sec 3.6 concludes this chatper.
 
 \section{Background \& Motivation}
 
@@ -1162,7 +1166,7 @@ Therefore, the essence of the distance computation is the dot product of two vec
     \end{aligned}
     \end{equation}
 
-where $\boldsymbol{p}_{i}$ and $\boldsymbol{q}_{i}$ are $d$ dimensional vectors. For simplicity, we assume that all the data in this work are $\ell$2-normalized, and the term \textit{distance} in the paper is cosine distance.
+where $\boldsymbol{p}_{i}$ and $\boldsymbol{q}_{i}$ are $d$ dimensional vectors. For simplicity, we assume that all the data in this work are $\ell$2-normalized, and the term \textit{distance} in the chapter is cosine distance.
 
 \subsection{\textit{K}-Selection on AI Processors}
 
@@ -1507,17 +1511,17 @@ Fig. \ref{fig:final} illustrates the acceleration rates of the optimal tiling sh
 
 In addition, with our pruning method, for the case when $k = 8$, 72.80\% of the optimization problem's search space is reduced; for $k = 16$, 55.23\% of the space is reduced. The percentage of the pruned domain is related to parameter $k$, which determines the proportion of the constant cost to the execution time related to the workloads of the $k$-selection.
 
-\section{Conclusion \& Future Work}
+\section{Conclusion}
 
-This paper introduced SelB-\textit{k}-NN, which is a novel \textit{k}-NN algorithm specifically designed for the AI processors. Based on the fact that the scalar operations, vectorized comparisons \& selections perform unexpectedly poorly on the AI processors, the main idea of SelB-\textit{k}-NN is to decrease the two operations as much as possible combining the selection sort and bitonic $k$-selection. Since the AI processors produced by different manufacturers have various designs, we propose two algorithms to reduce hardware support requirements to the most critical operations of deep learning. Especially, the involvement of \verb|ReLU| in the bitwise operations brings new thoughts for the famous Bit Twiddling Hack problems. We believe our first step of this algorithm could inspire more brilliant ideas for those classical solutions when applied to the AI processors. For large datasets, we set up an optimization problem for the optimal performance based on accurate quantification with a pruning method working in the preprocessing stage.
-
-In the future work, we plan to extend SelB-\textit{k}-NN to the popular variants of \textit{k}-NN, like \text{K}-Nearest Neighbor Graph (\text{k}-NNG). We are also attractive in exploring the programmability of \verb|ReLU| in more bitwise applications.
+This chapter introduced SelB-\textit{k}-NN, which is a novel \textit{k}-NN algorithm specifically designed for the AI processors. Based on the fact that the scalar operations, vectorized comparisons \& selections perform unexpectedly poorly on the AI processors, the main idea of SelB-\textit{k}-NN is to decrease the two operations as much as possible by combining the selection sort and bitonic $k$-selection. Since the AI processors produced by different manufacturers have various designs, we propose two algorithms to reduce hardware support requirements to the most critical operations of deep learning. Especially, the involvement of \verb|ReLU| in the bitwise operations brings new thoughts for the famous Bit Twiddling Hack problems. We believe our first step of this algorithm could inspire more brilliant ideas for those classical solutions when applied to the AI processors. For large datasets, we set up an optimization problem for the optimal performance based on accurate quantification with a pruning method working in the preprocessing stage.
 
 
 %=============================================================================
 
 \chapter{Cube-f(x): Transforming to Matrix Multiplications}
 \label{sec_4}
+
+In this chapter, we discuss the second optimization approach with the example of Cube-$f(x)$. Sec 4.1 introduces the existing algorithms to evaluate special functions as the background. Sec 4.2 discusses the algorithm Cube-$f(x)$ in detail, which includes two main stages: the computation stage in Sec. 4.2.1 and the preparation stage in Sec. 4.2.2. Sec. 4.3 introduces In-matrix Parallelism, which aims to enhance Cube-$f(x)$ for more general cases. Sec. 4.4 evaluates Cube-$f(x)$ and Sec. 4.5 gives the conclusions.
 
 \section{Background \& Motivation \label{sec:2}}
 
@@ -1925,7 +1929,7 @@ Fig. \ref{fig:compare} illustrates the evaluation results. Generally, all the al
 
 When the evaluation function number is $1$, Horner's Method is $2.68\times$ and $2.82\times$ faster than Cube-$f(x)$. However, when the number is $9$, Cube-$f(x)$ reversely reports $2.48\times$ and $2.60\times$ speedup instead. In detail, as shown in Fig. \ref{fig:compare}, when the evaluation function number is larger than 3, Cube-$f(x)$ reports better efficiency than other implementations and keeps enlarging the performance gap. The main reason for the results is that compared to the time complexity we discussed in Sec. \ref{sec:3} for naive Cube-$f(x)$, the time complexity of general Cube-$f(x)$ is $O(Nk + \ceil{N / s} \ceil{k / s} + \ceil{N / s} \ceil{k / s} \ceil{j / s})$, where the execution time of Cube-$f(x)$ increases every $s$ evaluated functions. The ceiling functions are added here because the Matrix MAC must complete a basic unit $(s \times s \times s)$ of matrix multiplication each time, as mentioned in Sec. \ref{sec:qua}. Therefore, for the number of evaluated functions within $[1, 16]$, Cube-$f(x)$ reports a nearly constant execution time, while the other implementations increase linearly. As for the evaluated function number of 17, where $\ceil{17 / 16} = 2$, the execution time of Cube-$f(x)$ finally increases to $179.14\%$ of the previous results with the data size of 16384, which reports $4.60\times$ speedup compared to Horner's Method. 
 
-In summary, although Cube-$f(x)$ shows less performance when the evaluation function number is low, it performs with much higher efficiency than other implementations for a high evaluation function number, which is also the situation we focus on in this paper.
+In summary, although Cube-$f(x)$ shows less performance when the evaluation function number is low, it performs with much higher efficiency than other implementations for a high evaluation function number, which is also the situation we focus on in this chapter.
 
 \begin{figure}[htbp]
     \begin{adjustbox}{addcode={
@@ -1945,12 +1949,9 @@ Fig. \ref{fig:results} illustrates our collected evaluation results. Since the e
 
 Especially, the results of Cube-$f(x)$ with In-Matrix Parallelism in the case $k = 6$ report similar performance to those in the case $k = 8$. The main reason is that the best original Sequence Matrix number $t$ for the two cases is the same. Therefore, even with In-Matrix Parallelism, some computation power of the Matrix MAC is wasted since $16 \mod 6 \neq 0$. The phenomenon suggests that In-Matrix Parallelism still cannot exploit all computation power of the Matrix MAC, which requires a deeper study in the future.
 
-\section{Conclusion \& Future Work \label{sec:8}}
+\section{Conclusion \label{sec:8}}
 
-This paper introduced Cube-$f(x)$, a novel algorithm to evaluate special functions with the powerful Matrix MACs of the AI processors. Based on the fact that the AI processors usually equip poor vector units and a piece of data often needs to be computed by multiple functions in real-world applications, Cube-$f(x)$ converts the building and computation of Taylor polynomials to specific matrix multiplications supported by the Matrix MACs. Since the Matrix MACs must complete a fixed shape of matrix multiplication each time, Cube-$f(x)$ wastes a part of the computation power when the order number of the Taylor polynomial is low. Therefore, we propose In-Matrix Parallelism to fuse the matrix multiplications of Cube-$f(x)$, which again empowers Cube-$f(x)$ and exploits the computation power as much as possible. Although the application and performance of Cube-$f(x)$ are still imperfect, we believe our attempt to extend the programmability of the AI processors would inspire more researchers to work on this novel hardware with more valuable results.
-
-In future work, we will study those special matrix multiplications deeper, which may accelerate other important applications for general purposes but not AI applications. We also will look further at In-Matrix Parallelism to see whether it can be applied to all matrix multiplications, significantly improving the Matrix MACs' utilization.
-
+This chapter introduced Cube-$f(x)$, a novel algorithm to evaluate special functions with the powerful Matrix MACs of the AI processors. Based on the fact that the AI processors usually equip poor vector units and a piece of data often needs to be computed by multiple functions in real-world applications, Cube-$f(x)$ converts the building and computation of Taylor polynomials to specific matrix multiplications supported by the Matrix MACs. Since the Matrix MACs must complete a fixed shape of matrix multiplication each time, Cube-$f(x)$ wastes a part of the computation power when the order number of the Taylor polynomial is low. Therefore, we propose In-Matrix Parallelism to fuse the matrix multiplications of Cube-$f(x)$, which again empowers Cube-$f(x)$ and exploits the computation power as much as possible. Although the application and performance of Cube-$f(x)$ are still imperfect, we believe our attempt to extend the programmability of the AI processors would inspire more researchers to work on this novel hardware with more valuable results.
 
 \chapter{Conclusion and Future work}
 \label{sec_5}
