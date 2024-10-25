@@ -1,0 +1,9 @@
+\chapter{Cube-fx: Transforming to Matrix Multiplications}
+\label{sec_4}
+
+In this chapter, we discuss the second optimization approach with the example of Cube-fx. Sec 4.1 introduces the existing algorithms to evaluate special functions as the background. Sec 4.2 discusses the algorithm Cube-fx in detail, which includes two main stages: the computation stage in Sec. 4.2.1 and the preparation stage in Sec. 4.2.2. Sec. 4.3 introduces an enhanced mapping, which aims to enhance Cube-fx for more general cases. Sec. 4.4 evaluates Cube-fx and Sec. 4.5 gives the conclusions.
+
+
+\section{Conclusion \label{sec:8}}
+
+This chapter introduced Cube-fx, a novel algorithm to map Taylor expansion for function evaluation onto the powerful Matrix MACs of the AI processors, especially the Huawei Ascend processors we focus on in this paper. Based on the fact that the AI processors usually equip poor vector units and a piece of data often needs to be computed by multiple functions in real-world applications, Cube-fx converts the building and computation of Taylor polynomials to specific matrix multiplications supported by the Matrix MACs. Since the Matrix MACs must complete a fixed shape of matrix multiplication each time, Cube-fx wastes a part of the computation power when the order number of Taylor polynomial is low. Therefore, we propose another further mapping technology to fuse the matrix multiplications of Cube-fx, which again empowers Cube-fx and exploits the computation power as much as possible. Although the application and performance of Cube-fx are still imperfect, our attempt to extend the programmability of the AI processors would inspire more researchers to work on this novel hardware with more valuable results.

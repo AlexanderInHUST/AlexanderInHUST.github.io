@@ -1,0 +1,13 @@
+\chapter{Conclusion and Future work}
+\label{sec_5}
+
+This thesis presents a typical investigation of AI processors, the Huawei Ascend AI processors as an example, with two representative solutions for hardware-aware optimizations. We first perform thorough benchmarks of the hardware details and build a performance model to expose its working details (Chapter \ref{sec_2}). Then, this thesis proposes two major optimization approaches: 1) replace the most inefficient scalar or vectorized operations with others (Chapter \ref{sec_3}), and 2) replace the scalar or vectorized operations with matrix multiplications (Chapter \ref{sec_4}). The major results and outcomes of the thesis are introduced as follows:
+
+\textbf{First, a highly accurate performance model is established based on detailed and complete dissections of the Huawei Ascend processors.} 
+In addition to the benchmarks for the hardware units in general execution, the dissections focus on the bus contentions, which significantly affect the runtime behaviors of the IO. With sufficient collected hardware characteristics and parameters, the performance model, named Verrocchio, takes the program source codes as the inputs to predict its execution time. Meanwhile, the benchmark results reveal the main design tradeoff of the AI processors, sacrificing the performance of scalar and vector operations for optimized matrix multiplications.
+
+The tradeoff brings one of the most significant challenges to migrating the algorithms from other platforms: the common-used vectorized operations become the bottlenecks of the algorithm implementation. Although AI processors help to improve the performance of matrix multiplications significantly, complete AI applications usually require other necessary scalar or vectorized operations, including dynamic addressing or activations. Therefore, the thesis proposes two major approaches to mitigate the bottlenecks. 
+
+\textbf{1) The first approach is to replace the most inefficient scalar and vector operations with others.} 
+
+\textbf{2) The second approach is to replace the scalar and vector operations with matrix multiplications on the Matrix MACs.}

@@ -1,0 +1,29 @@
+\centering
+Abstract of thesis entitled\\
+~\\
+{\Large \bf 
+    Hardware-aware algorithm optimization of AI processors: Huawei Ascend as an example
+}\\
+~\\
+submitted by\\
+~\\
+{\Large \bf Yifeng Tang}\\
+~\\
+for the degree of Doctor of Philosophy\\
+at the University of Hong Kong\\
+in Janurary 2024\\
+~\\
+\justifying
+
+Artificial Intelligence (AI) is one of the most prominent and impactful applications in both the fields of research and industry. However, complex AI models with massive parameters require sufficient computational power, which specialized hardware named AI processors can provide. In this thesis, we study the design and performance of Huawei Ascend processors, a typical example of AI processors, and propose novel optimization techniques for efficient algorithm implementation.
+
+AI processors are mainly composed of matrix multiplier-accumulators (MACs), which compute the matrix multiplications with extreme computation power. Matrix multiplications are the core operations of many AI algorithms, such as convolutional neural networks (CNNs) and transformers. However, only matrix multiplications cannot compose a complete AI application. AI processors also need other hardware units to support different types of operations and data transfers.
+
+Huawei Ascend processors equip four types of hardware units: IO units for intra- or inter-core data transfer, vector units for vectorized operations, scalar units for address calculations or condition branch analyses, and Matrix MACs for matrix multiplications. Each type of unit has its own characteristics and limitations, which affect the performance and optimization of AI algorithms on Ascend processors.
+
+To fully understand the structure and behavior of Ascend processors, we first propose specially crafted micro-benchmarks to identify their hardware characteristics, such as IO contentions, bandwidth sharing, and runtime behaviors. Based on the collected results, we formulate a performance model, Verrocchio, which predicts the execution time of real-world Ascend kernels with high accuracy. Verrocchio achieves average error rates of 2.62$\%$ and 2.30$\%$ in sample kernels for single-core and double-core execution, respectively.
+
+Based on the fact that compared to the Matrix MACs, other units usually perform poorly and significantly ruin the performance of the whole application.
+In addition to the performance model, we also provide two major optimization approaches for efficient algorithm implementation on Ascend processors: 1) replacing the most inefficient scalar or vectorized operations with better ones, and 2) replacing the scalar or vectorized operations with matrix multiplications. For the first approach, we use \textit{k}-nearest neighbors (\textit{k}-NN) algorithm as an example and propose SelB-\textit{k}-NN (Selection-Bitonic-\textit{k}-NN), which avoids the expansion of the weakly-supported operations on large-scale datasets. In evaluation, SelB-\textit{k}-NN achieves 2.01$\times$ speedup over the bitonic \textit{k}-selection, 23.93$\times$ over the heap approach, and 78.52$\times$ over the CPU approach. For the second approach, we propose a novel method, Cube-f(x), to evaluate special functions by computing their Taylor polynomials with Matrix MACs. Evaluations show that Cube-f(x) outperforms the naive Taylor expansion implementation by 2.79$\times$, CORDIC by 6.12$\times$, and Horner's Method by 1.66$\times$.
+
+(414 words)
