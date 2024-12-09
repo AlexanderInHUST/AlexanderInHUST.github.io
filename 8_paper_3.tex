@@ -16,7 +16,7 @@ Taylor expansion is a powerful mathematical tool for evaluating a function. It e
     \end{aligned}
     \end{equation}
 
-One of the most common approaches to evaluate a polynomial, including Taylor polynomial, is Horner's Method. Computing an original form of $n$-degree polynomial, e.g., $p(x)$ in Eq. \ref{eq:horner}, requires $(n^2 + n)/2$ multiplications and $n$ additions. Horner's Method converts a $n$-degree polynomial to a combination of $n$ linear polynomials, which only needs $n$ multiplications and additions. As an injective function, Horner's Method can be naturally adapted to a parallel implementation of SIMD on vectorized units when given large inputs. However, as discussed in Sec. \ref{sec_1_2_2}, current AI processors perform poorly on vectorized operations. Horner's Method fails to mitigate the heavy performance loss caused by the weak vectorized units on AI processors. Comparing reducing the number of vectorized operations, activating the Matrix MACs for computation could be more helpful on the AI processors.
+One of the common approaches to evaluate a Taylor polynomial is Horner's Method. Evaluating an $n$-degree polynomial in its original form, such as $p(x)$ in Eq. \ref{eq:horner}, requires $(n^2 + n)/2$ multiplications and $n$ additions. Horner's Method reduces this to $n$ multiplications and additions by transforming the polynomial into a combination of $n$ linear polynomials. Estrin's Scheme \cite{DBLP:conf/aieeire/Estrin60} further decomposes the polynomial into independent sub-polynomials that can be computed in parallel, requiring $(n - 1)$ multiplications and additions, along with an additional $\log_2{n}$ squarings, when $n$ is a power of 2. Motzkin's Method \cite{motzkin1955evaluation}, using coefficient pre-processing, divides the polynomial into several sub-polynomials. For a 4th-degree polynomial, Motzkin's Method requires only 2 multiplications and 5 additions, compared to 4 multiplications and additions with Horner's Method, making it more efficient on hardware where multiplications are costly. These methods, as injective functions, can naturally be adapted for parallel implementation using SIMD on vectorized units when dealing with large inputs. However, as discussed in Sec. \ref{Sec:1_1_2}, current AI processors perform poorly on vectorized operations, leading to performance losses. Therefore, instead of reducing the number of vectorized operations, leveraging Matrix MACs for computation will be more effective on AI processors.
 
 \begin{equation}
     \label{eq:horner}
@@ -26,9 +26,7 @@ One of the most common approaches to evaluate a polynomial, including Taylor pol
     \end{aligned}
     \end{equation}
 
-Furthermore, in some applications (e.g., multiple-order derivatives in optimization problems \cite{boyd2004convex}, different functions for feature extraction \cite{guyon2006introduction}, or combinations of multiple activations \cite{DBLP:conf/icpr/ManessiR18}), a piece of data needs to be computed by multiple independent functions. Horner's Method must repeat the same process for all functions. For the example $f_a(x)$ in Eq. \ref{eq:horner}, let us consider another function $f_b(x)$, which share the same input $x$.
-Then, during the computation, the intermediate result $(a_nx + a_{n-1})$ of $f_a(x)$ is discarded immediately after the computation of $f_a(x)$ and cannot be reused by $f_b(x)$. On the other hand, for the original form of Taylor polynomials without using Horner's Method, the variable sequence $(x^n, x^{n-1}, ..., x)$ can serve as a common intermediate result. If the computation of $f_a(x)$ had generated the variable sequence, $f_b(x)$ could reuse it for its subsequent computation. For multiple functions to be computed, all could reuse the variable sequence. The data preparation of the variable sequence is time-consuming with the vectorized units on the AI processors, which can cancel the potential benefits of the common intermediate result.
-
+Furthermore, in applications such as optimization problems \cite{boyd2004convex}, feature extraction \cite{deller1993discrete}, or combinations of multiple activations \cite{DBLP:conf/icpr/ManessiR18}, data often need to be processed by multiple functions. Methods like Horner's Method, Estrin's Scheme, and Motzkin's Method handle each function independently, requiring redundant calculations. For example, consider two functions, $f_a(x)$ in Eq. \ref{eq:horner} and $f_b(x)$, which share the same input $x$. Taking Horner's Method as an example, the intermediate result from computing $f_a(x)$, such as $(a_nx + a_{n-1})$, is discarded immediately after computing $f_a(x)$ and cannot be reused for $f_b(x)$. This results in repeating the evaluation process for each function. In contrast, using the original form of Taylor polynomials allows for common intermediate results, such as the sequence of powers $(x^n, x^{n-1}, \ldots, x)$, to be reused by multiple functions. If $f_a(x)$ generates this sequence, $f_b(x)$ and other functions can reuse it for their computations and reduce redundancy. However, generating this sequence is time-consuming with the vectorized units on AI processors, potentially offsetting the benefits of intermediate result reuse because of the inefficiencies in vectorized operations.
 
 \section{Cube-fx Algorithm \label{sec:3}}
 
@@ -115,7 +113,7 @@ The preparation stage of Cube-fx is based on two mathematical formulas. The firs
 The second formula is a special case of matrix multiplications, given in Eq. \ref{eq:spec_mat}, where the left matrix is an input matrix of $(m \times s)$, $p_{i, j} \in \mathbb{R}$, the right matrix $mat$ is a matrix of $(s \times j_0)$, $k_{j} \in \mathbb{R}$. Except for a non-zero vector $(k_1, k_2, \dots, k_{j_0})$ at the row $i_0$, all other elements $b_{i, j}$ of $mat$ are $0$. Therefore, the matrix multiplication, shown as Eq. \ref{eq:spec_mat}, computes the products of the column $i_0$ of the left matrix $(\ln v_{1, i_0}, \ln v_{2, i_0}, ..., \ln v_{m, i_0})^{T}$, the exponents of Eq. \ref{eq:power}, and the row $i_0$ of the right matrix $(k_1, k_2, ..., k_{j_0})$ to form a full result matrix. Therefore, the required variable sequences are computed with an extra logarithmic operation.
 
 \begin{algorithm}[tb]
-    \caption{Preparation Stage of Cube-fx}
+    \caption{Preparation stage of Cube-fx}
     \setlength{\arraycolsep}{1.2pt}
     \label{alg:prepare}
     \SetKwInOut{Input}{Input}
@@ -165,7 +163,7 @@ The second formula is a special case of matrix multiplications, given in Eq. \re
 \end{algorithm}
 
 Based on the two formulas, Alg. \ref{alg:prepare} presents the preparation stage of Cube-fx, where we consider the shape of the Matrix MACs is $(s \times s)$. In the beginning, Alg. \ref{alg:prepare} initializes an $s$-element array of $(s \times k)$ Sequence Matrices $mat[s]$, as we described in Eq. \ref{eq:spec_mat}. For the $idx$-th Sequence Matrix $mat[idx]$, the non-zero row is at row $idx$, whose value is an increasing vector $(1, 2, \dots, k)$. Therefore, for each row $idx$ of the $(s \times s)$ Matrix MACs, we construct a unique Sequence Matrix with a non-zero vector at that row. Then, Alg. \ref{alg:prepare} computes the logarithmic results $\textbf{V}_{ln}$ of the input $\textbf{V}$ with the built-in vectorized operation. The logarithmic results are reinterpreted as an $(\frac{N}{s} \times s)$ matrix $\textbf{V}_{mat}$ and transferred to the Matrix MAC. 
-At the mathematical level, the reinterpretation constructs the left matrix in Eq. \ref{eq:spec_mat}, where $m = \frac{N}{s}$. At the system level, Huawei Ascend processors adopt a row-major order for the $(16 \times 16)$ left matrix of the basic matrix multiplication as discussed in Sec. \ref{sec_1_2_2}. Therefore, the continuous memory segment $\textbf{V}_{ln}$ requires no additional data layout conversion, as it is inherently indexed in Z-order as an $(\frac{N}{s} \times s)$ through a single data transfer operation to the Matrix MAC.
+At the mathematical level, the reinterpretation constructs the left matrix in Eq. \ref{eq:spec_mat}, where $m = \frac{N}{s}$. At the system level, Huawei Ascend processors adopt a row-major order for the $(16 \times 16)$ left matrix of the basic matrix multiplication as discussed in Sec. \ref{sec:2.1}. Therefore, the continuous memory segment $\textbf{V}_{ln}$ requires no additional data layout conversion, as it is inherently indexed in Z-order as an $(\frac{N}{s} \times s)$ through a single data transfer operation to the Matrix MAC.
 % Especially, the reinterpretation needs no physical data layout conversion but only from the logical view. 
 
 \begin{figure}[t]
@@ -461,29 +459,29 @@ First, CORDIC reports $0.000\%$ error rates with the iteration of 8, which shows
 
 The evaluation results indicate that Cube-fx has comparable or lower error rates than Horner's method for most cases. Although the precision of Cube-fx is much lower than CORDIC, the errors are caused by the theoretical limit of Taylor expansion but not Cube-fx itself. In other words, compared to the pure multiplications and additions of Horner's method, the logarithm and exponent operations of Cube-fx do not bring extra errors to the computation and even reduce the errors for some cases. Therefore, for applications where Taylor expansion has met the precision requirements, Cube-fx would be safe to replace other implementations, including Horner's Method.
 
-\begin{figure}[tb]
-  \centering{\includegraphics[scale=0.36]{figures/compare.png}}
-  \caption{The execution time evaluations (order number = 16)}
-  \label{fig:compare}
-  \end{figure}
-
 \subsection{Full Matrix MAC Evaluation \label{Sec: 4.2}}
 
-In this subsection, we compare the execution time of Cube-fx with naive Taylor expansion implementation, CORDIC, and Horner's Method. The naive Taylor expansion implementation builds the variable sequences and does the multiplications with the Taylor polynomial coefficients. All the implementations are SIMD-versioned based on the vectorized operations. For those algorithms based on Taylor expansion, the order number we used is 16, which equals the side length of the Matrix MACs $(k = s = 16)$ and saturates the Matrix MACs of the Ascend processors. For CORDIC, the iteration number we used is 4, which already reports high-precision results, as discussed in Sec. \ref{Sec: 4.1}. For a fair comparison, all the evaluated functions used here are trigonometric functions, for which CORDIC does not need extra data pre- and post-processes. We analyze the kernel execution time with the variation of the number of the evaluated functions for input data sizes 16384 and 32768 on Ascend 310 processors and 1638400 and 3276800 on Ascend 910B processors, which refers to the length of the input data sequence being processed.
+In this subsection, we compare the execution time of Cube-fx with the naive Taylor expansion, CORDIC, Horner's Method, Estrin's Scheme, and Motzkin's Method. The naive Taylor implementation is used in SymPy \cite{10.7717/peerj-cs.103} for its \verb|series()| function, which builds the variable sequences and performs the multiplications with the Taylor polynomial coefficients. All implementations are SIMD-optimized using vectorized operations. For Taylor-based algorithms, we use an order of 16, matching the side length of the Matrix MACs $(k = s = 16)$ to utilize the Matrix MACs on Ascend processors fully. For CORDIC, we use 4 iterations, providing high precision as discussed in Sec. \ref{Sec: 4.1}. To ensure a fair comparison, all functions evaluated are trigonometric, avoiding the need for extra pre- and post-processing for CORDIC. We analyze the kernel execution time for varying numbers of evaluated functions, using input data sizes of 16384 and 32768 on Ascend 310 processors, and 1638400 and 3276800 on Ascend 910B processors, which represent the length of the input data sequence being processed.
+
+\begin{figure}[thp]
+    \centering{\includegraphics[scale=0.5]{figures/compare.png}}
+    \caption{The execution time evaluations (order number = 16)}
+    \label{fig:compare}
+    \end{figure}
 
 \subsubsection{Results}
 
-Fig. \ref{fig:compare} illustrates the evaluation results. Generally, all the algorithms grow with the increment of the evaluated function number. Since all the algorithms traverse the data for execution, the execution time linearly increases with the data sizes. Cube-fx shows significant speedups compared to other implementations when the number of the evaluated functions is large enough. For the results on Ascend 310 processors, Cube-fx shows an average result of $2.73\times$ speedup compared to the naive Taylor expansion implementation, $2.42\times$ speedup compared to CORDIC, and $1.64\times$ speedup compared to Horner's Method. For the results on Ascend 910B processors, Cube-fx reports $1.65\times$ speedup compared to the naive Taylor expansion implementation, $3.52\times$ speedup compared to CORDIC, and $1.06\times$ speedup compared to Horner's Method.
+Fig. \ref{fig:compare} illustrates the evaluation results. Generally, all the algorithms grow with the increment of the evaluated function number. Since all the algorithms traverse the data for execution, the execution time linearly increases with the data sizes. Cube-fx shows significant speedups compared to other implementations when the number of the evaluated functions is large enough. For the results on Ascend 310 processors, Cube-fx shows an average result of $2.73\times$ speedup compared to the naive Taylor expansion implementation, $6.06\times$ speedup compared to CORDIC, $1.64\times$ speedup compared to Horner's Method, $1.53\times$ speedup compared to Estrin's Scheme and $1.85\times$ speedup compared to Motzkin's Method. For the results on Ascend 910B processors, Cube-fx reports $1.63\times$ speedup compared to the naive Taylor expansion implementation, $3.52\times$ speedup compared to CORDIC, $1.28\times$ speedup compared to Horner's Method, $1.20\times$ speedup compared to Estrin's Scheme and $1.42\times$ speedup compared to Motzkin's Method. 
 
-When the evaluation function number is $1$, Horner's Method is $2.68\times$ and $2.82\times$ faster than Cube-fx. However, when the number is $9$, Cube-fx reversely reports $2.48\times$ and $1.05\times$ speedup instead. In detail, as shown in Fig. \ref{fig:compare}, on Ascend 310 processors, when the evaluation function number is larger than 3, Cube-fx reports better efficiency than other implementations and keeps enlarging the performance. On Ascend 910B processors, the turning point is 9. The main reason for the results is that compared to the time complexity we discussed in Sec. \ref{sec:3} for naive Cube-fx, the time complexity of general Cube-fx is $O(Nk + \ceil{N / s} \ceil{k / s} + \ceil{N / s} \ceil{k / s} \ceil{j / s})$, where the execution time of Cube-fx increases every $s$ evaluated functions. The ceiling functions are added here because the Matrix MAC must complete a basic unit $(s \times s \times s)$ of matrix multiplication each time, as mentioned in Sec. \ref{sec:qua}. Therefore, for the number of evaluated functions within $[1, 16]$, Cube-fx reports a nearly constant execution time, while the other implementations increase linearly. As for the evaluated function number of 17, where $\ceil{17 / 16} = 2$, the execution time of Cube-fx finally increases to $1.79\times$ of the previous results on Ascend 310 processors, which reports $4.60\times$ speedup compared to Horner's Method. On Ascend 910B processors, the execution time of Cube-fx with the evaluated function number 17 increases to $1.81\times$ and reports $1.08\times$ speedup compared to Horner's Method. In addition, by activating the Matrix MACs, we reduce the utilization rate of the weak Vector Units to $56.38\%$ on Ascend 310 and $34.95\%$ on Ascend 910B, which move most of the workloads to the Matrix MACs.
+When the evaluation function number is $1$, Horner's Method is $2.68\times$ and $6.02\times$ faster than Cube-fx, Estrin's Scheme is $2.87\times$ and $6.38\times$ faster, and Motzkin's Method reaches $2.38\times$ and $4.76\times$ on Ascend 310 and 910B processors, respectively. However, when the number is $9$, Cube-fx reversely reports $2.48\times$ and $1.05\times$, $2.48\times$ and $1.19\times$, and $2.80\times$ and $1.42\times$ speedup instead. In detail, as shown in Fig. \ref{fig:compare}, on Ascend 310 processors, when the evaluation function number is larger than 3, Cube-fx reports better efficiency than other implementations and keeps enlarging the performance. On Ascend 910B processors, the turning point is 8. The main reason for the results is that compared to the time complexity we discussed in Sec. \ref{sec:3} for Cube-fx, the time complexity of general Cube-fx is $O(Nk + \ceil{N / s} \ceil{k / s} + \ceil{N / s} \ceil{k / s} \ceil{j / s})$, where the execution time of Cube-fx increases every $s$ evaluated functions. The ceiling functions are added here because the Matrix MAC must complete a basic unit $(s \times s \times s)$ of matrix multiplication each time, as mentioned in Sec. \ref{sec:qua}. Therefore, for the number of evaluated functions within $[1, 16]$, Cube-fx reports a nearly constant execution time, while the other implementations increase linearly. As for the evaluated function number of 17, where $\ceil{17 / 16} = 2$, the execution time of Cube-fx finally increases to $1.79\times$ of the previous results on Ascend 310 processors. On Ascend 910B processors, the execution time of Cube-fx with the evaluated function number 17 increases to $1.81\times$. In addition, by activating the Matrix MACs, we reduce the utilization rate of the weak Vector Units to $56.38\%$ on Ascend 310 and $34.95\%$ on Ascend 910B, which move most of the workloads to the Matrix MACs.
 
-\subsubsection{Discussion}
+\subsubsection{Discussion \label{sec:dis_1}}
 
 The results above reveal that Cube-fx performs much better on Ascend 310 processors than on Ascend 910B processors. Based on the hardware structure, this subsection discusses the reasons and the potential improvements.
 
 \begin{figure}[tbp]
   \centering{\includegraphics[scale=0.35]{figures/discussion.png}}
-  \caption{Two experiments of modified implementations}
+  \caption{Performance comparison of modified implementations on Ascend 910B}
   \label{fig:disc}
   \end{figure}
 
@@ -491,17 +489,102 @@ First, the most significant reason is that Ascend 910B processors have two Vecto
 
 Second, since Cube-fx heavily relies on the cooperation of the two computation units, the data communication between Cube Core and Vector Core heavily influences the performance of Cube-fx. As shown in Fig. \ref{fig:dav}, to transfer data between the Cube Units and Vector Units, Ascend 910B processors must write the results back to the global memory and then read from it. The IO operations contribute to most of the execution time compared with the execution on Ascend 310 processors. Fig. \ref{fig:disc}(b) shows the results of removing the data communication between Cube Core and Vector Core by manually deleting the related instructions. We illustrate the execution of Cube Core and Vector Core separately in Fig. \ref{fig:disc}(b). Each bar refers to the execution time of each hardware unit on the according core. As a result, the modified version without data communication (lower subgraph) reports a $43.46\%$ reduction in the execution time compared with the original version (upper subgraph). Notice that in addition to the reduction of Fix-Pipe and MTE3 Units, the execution time of the Scalar Unit also reduces, which computes the memory address of the data communication. Furthermore, the busy waiting time of Vector Core is significantly reduced to $28.55\%$ of that in the original Cube-fx. The busy waiting time comprises the idleness and inter-core synchronization we discussed in Sec. \ref{sec:3.3}. Even though we optimize the algorithm for potential concurrent execution, the extra inter-core data communication severely extends the execution periods on both units, which the concurrent execution cannot overlap and hide.
 
-\begin{figure}[tb]
-  \centering{\includegraphics[scale=0.36]{figures/results.png}}
-  \caption{The accelerations of the enhanced Cube-fx}
-  \label{fig:results}
-  \end{figure}
+\subsubsection{AI Cube + AI Vector vs AI Cube + CPU Vector}
+
+Since previous experiments identified vector units as a potential bottleneck, this subsection investigates the performance of integrating CPU vector units with Ascend Cube Units. We evaluate the performance of Cube-fx by combining CPU Vector Units (Arm Neon \cite{neon}) with Ascend Cube Units and compare it against using only Ascend processors. The input data sizes are configured as 16384 for Ascend 310 and 1638400 for Ascend 910B processors. In contrast to the previous experiments, where the Huawei profiler, \textit{msprof}, was used for performance measurement, we use an end-to-end wall clock approach here. This change is because of the limitation that the profiler cannot be used to measure execution times on the IO and CPU sides.
+  
+\begin{figure}[tbp]
+    \centering{\includegraphics[scale=0.58]{figures/cpu_ai.png}}
+    \caption{The comparison between (AI Cube + AI Vector) and (AI Cube + CPU Vector)}
+    \label{fig:cpu_ai}
+    \end{figure}
+  
+As shown in Fig. \ref{fig:cpu_ai}, performing all the computations on the AI processors leads to much faster execution compared to using CPUs for vectorized computations, achieving speedups of $39.81\times$ and $31.67\times$ on Ascend 310 and 910B processors, respectively. We also included a scenario without using the CPUs for vectorized computations, labeled as 'Without CPU Vec' in Fig. \ref{fig:cpu_ai}. These results indicate that the execution time was still $32.63\times$ and $26.89\times$ longer compared to using only the AI processors. The main reason for this is that transferring data between the AI processors and CPUs takes too much time. Additionally, doing vectorized computations on the CPU is inherently slower. Firstly, Arm Neon Instructions do not directly support exponentiation or logarithmic functions, requiring extra processing and evaluation. Secondly, the CPU SIMD units (Huawei Kunpeng) are much narrower compared to Ascend Vector Units (8 float16 \cite{kunpeng} vs 128 float16). Therefore, combining CPU Vector Units with Ascend Cube Units ends up being less efficient, making it more advantageous to conduct all computations on the AI processors alone.
+
+\subsubsection{Results for Multi-Cores}
+
+This subsection evaluates Cube-fx in multi-core cases on both Ascend 310 and 910B processors. For different core numbers, the data size per core is fixed at 16384 for Ascend 310 and 1638400 for Ascend 910B, respectively.
+
+\begin{figure}[tbp]
+    \centering{\includegraphics[scale=0.58]{figures/multi.png}}
+    \caption{The multi-core execution of Cube-fx}
+    \label{fig:multi}
+    \end{figure}
+
+As shown in Fig. \ref{fig:multi}, the performance of Cube-fx in multi-core environments shows no clear performance loss compared to the single-core case, which suggests that Cube-fx runs efficiently when multiple cores are used. This result can be attributed to Cube-fx being a data parallelism-based algorithm, allowing it to distribute workloads effectively among different cores and fully utilize the processors' resources. This ensures scalability and maintains high performance across multiple cores, taking full advantage of the parallel processing capabilities and maximizing overall system performance.
 
 \subsection{Unfilled Matrix MAC Evaluation}
+
+\begin{figure}[tbp]
+    \centering{\includegraphics[scale=0.36]{figures/results.png}}
+    \caption{The accelerations of the enhanced Cube-fx}
+    \label{fig:results}
+    \end{figure}
 
 This subsection evaluates the performance of the enhanced Cube-fx on both Ascend 310 processors and Ascend 910B processors. For cases where $k = \{2, 6, 12\}$, the results are evaluated on Ascend 310 processors, while for cases where $k = \{4, 8, 16\}$, the results are evaluated on Ascend 910B processors. To indicate the performance improvement of the enhanced Cube-fx, we compare its execution time with those of Horner's Method, naive Cube-fx, and the enhanced Cube-fx with a fixed number of merged matrices $t = 4$. The data size used in this subsection is 16384 and 1638400, respectively, on Ascend 310 and Ascend 910B. 
 
 Fig. \ref{fig:results} illustrates our collected evaluation results. Since the execution time of naive Cube-fx for all cases is the same, we plot it as a dashed line in all charts, which reports significant performance gaps between the other two implementations in most cases. Generally, the enhanced Cube-fx reports an average speedup of $1.83\times$ compared to naive Cube-fx on Ascend 310 processors and $1.63\times$ on Ascend 910B processors. While the best case reports a $3.39\times$ speedup on Ascend 310 processors and $2.68\%$ speedup on Ascend 910B processors, the worst reports an equivalent execution time compared to naive Cube-fx. Compared with the results of the enhanced Cube-fx when $t = 4$, the enhanced Cube-fx with the optimized $t$ reports an average speedup of $1.12\times$ and $1.28\times$. These results mean that applying the enhanced mapping to Cube-fx for all cases is riskless, and our optimized problem helps find the optimized execution of Cube-fx. Compared with Horner's Method on Ascend 310 processors, the enhanced mapping empowers Cube-fx again and offers the capability to beat Horner's Method. The enhanced Cube-fx reports lower execution time when the number of evaluated functions is larger than about 4, similar results to the saturated Matrix MAC results in Sec. \ref{Sec: 4.2}. However, on Ascend 910B processors, the enhanced Cube-fx cannot work as powerfully as on Ascend 310 processors. The reason is that Horner's Method works so well on Ascend 910B processors, as discussed in Sec. \ref{Sec: 4.2}, that Cube-fx can only outperforms when $k$ is large enough.
+
+\subsection{Case Study: Audio Signal Feature Extraction}
+
+In this subsection, we demonstrate how Cube-fx enhances the efficiency of feature extraction for real applications in audio signal processing \cite{deller1993discrete}. One-dimensional audio signals can be transformed using the Fourier transform to represent them as trigonometric functions, enabling Taylor expansion to evaluate the impact of small perturbations. For simplicity, our experiments directly use basic cosine signals as inputs. Table \ref{tab:app} presents several sample features used in the experiment. For features requiring multiple input values, such as Short-Time Autocorrelation, we employ a sliding window approach to generate input vectors from the original data for each window. All input data sizes are set to 16M for evaluation consistency.
+
+\begin{table}[tbp]
+  \caption{Sample features of audio signal}
+  \label{tab:app}
+  \begin{center}
+  
+  \scalebox{0.85}{
+      \begin{tabular}{c|c}
+      \toprule[1pt]
+          \makecell[c]{\textbf{Feature}} &
+          \makecell[c]{\textbf{Taylor Expansion of $x(t) = \cos(t)$}} \\
+      \midrule[0.5pt]
+  
+      \makecell[c]{Instantaneous \\ Amplitude} &
+      \makecell[c]{$
+      A(t + \Delta t) = |\cos(t)| - \sin(t) \Delta t - \cos(t) \Delta t^2 / 2$ \\
+      $+ \sin(t) \Delta t^3 / 6 + \cos(t) \Delta t^4 / 24 +  \dots$}
+      \\
+      \midrule[0.5pt]
+
+      \makecell[c]{Log- \\ Amplitude} &
+      \makecell[c]{$L(t + \Delta t) = \log(|\cos(t)|) - \tan(t) \Delta t - \Delta t^2 / (2\cos^2(t))$ \\
+      $+ \tan(t) \Delta t^3 / (3\cos^2(t)) - \Delta t^4 / (4\cos^4(t)) \dots$}
+      \\
+      \midrule[0.5pt]
+
+      \makecell[c]{Instantaneous \\ Power} &
+      \makecell[c]{$P(t + \Delta t) = \cos^2(t) - 2\cos(t)\sin(t) \Delta t - \sin^2(t) \Delta t^2$ \\
+      $+ 2\cos(t)\sin(t) \Delta t^3 / 3 + \sin^4(t) \Delta t^4 / 24 + \dots$} 
+      \\
+      \midrule[0.5pt]
+
+      \makecell[c]{Instantaneous \\ Gradient} &
+      \makecell[c]{$G(t + \Delta t) = -\sin(t) - \cos(t) \Delta t + \sin(t) \Delta t^2 / 2$ \\ 
+      $+ \cos(t) \Delta t^3 / 6 - \sin(t) \Delta t^4 / 24 + \dots$}
+      \\
+      \midrule[0.5pt]
+
+      \makecell[c]{Short-Time \\ Autocorrelation} &
+      \makecell[c]{$R(\tau+\Delta t) = \sum_{t=0}^{T-1} \cos(t) \cdot$ \\ 
+      $\left( \cos(t+\tau) - \sin(t+\tau) \Delta t - \cos(t+\tau) / 2 \Delta t^2 + \cdots \right)$}
+      \\
+
+      \bottomrule[1pt]
+      \end{tabular}
+  }
+  
+  \end{center}
+  \end{table}
+
+\begin{figure}[tbp]
+  \centering{\includegraphics[scale=0.58]{figures/app_acc.png}}
+  \caption{Feature extraction with Cube-fx acceleration in audio signal processing}
+  \label{fig:app_acc_1}
+  \end{figure}
+
+Fig. \ref{fig:app_acc_1} presents the evaluation results for feature extraction in audio signal processing. Beacuse of the input vector generation required in this application, Cube-fx demonstrates slightly lower acceleration compared to previous experiments. Across the three experiments, the average speedup over Horner's Method is $1.70\times$ on the Ascend 310 processor and $0.89\times$ on the Ascend 910B processor. Specifically, while the previous benchmarking results indicated nearly identical performance for extracting 7 features in both implementations, the real application results reveal a noticeable performance drop caused by the input vector generation. These findings reaffirm our previous analysis in Sec \ref{sec:dis_1}: Cube-fx, with its reliance on extensive communication, performs efficiently on the Ascend 310 processor but faces challenges on the Ascend 910B processor.
 
 \section{Conclusion \label{sec:8}}
 
