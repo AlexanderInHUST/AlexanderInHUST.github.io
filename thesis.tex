@@ -1,4 +1,4 @@
-\documentclass[12pt]{extbook}
+\documentclass[12pt, twoside]{book}
 %\usepackage[fontsize=12pt]{fontsize}
 \usepackage{fancyhdr}
 \usepackage{graphicx}
@@ -56,11 +56,16 @@
 
 \pagenumbering{Roman}
 
-%=============================================================================
-\include{1_abstract}
+\include{3_declaration}
+\newpage
+\thispagestyle{empty}
+
 \newpage
 \thispagestyle{empty}
 ~
+%=============================================================================
+\include{1_abstract}
+\thispagestyle{empty}
 %=============================================================================
 \include{2_title}
 \newpage
@@ -70,16 +75,10 @@
 \newpage
 \thispagestyle{empty}
 %=============================================================================
-\include{3_declaration}
+\include{4_acknowledgement}
 \newpage
 \thispagestyle{empty}
 ~
-%=============================================================================
-\newpage
-\thispagestyle{empty}
-%=============================================================================
-\include{4_acknowledgement}
-\thispagestyle{empty}
 %=============================================================================
 \newpage
 \setcounter{page}{1}
