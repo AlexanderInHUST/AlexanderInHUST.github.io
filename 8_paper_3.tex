@@ -1,7 +1,8 @@
 \chapter{Cube-fx: Mapping to Matrix Multiplications}
 \label{sec_4}
 
-In this chapter, we discuss the second optimization approach with the example of Cube-fx. Sec 4.1 introduces the existing algorithms to evaluate special functions as the background. Sec 4.2 discusses the algorithm Cube-fx in detail, which includes two main stages: the computation stage in Sec. 4.2.1 and the preparation stage in Sec. 4.2.2. Sec. 4.3 introduces an enhanced mapping, which aims to enhance Cube-fx for more general cases. Sec. 4.4 evaluates Cube-fx and Sec. 4.5 gives the conclusions.
+Last chapter introduce the first optimization approach, replacing the
+inefficient operations. However, the approach still leave the Matrix MACs, the most significant hardware unit of the AI processors, idle. Therefore, in this chapter, we discuss the second optimization approach with the example of Cube-fx. Sec 4.1 introduces the existing algorithms to evaluate special functions as the background. Sec 4.2 discusses the algorithm Cube-fx in detail, which includes two main stages: the computation stage in Sec. 4.2.1 and the preparation stage in Sec. 4.2.2. Sec. 4.3 introduces an enhanced mapping, which aims to enhance Cube-fx for more general cases. Sec. 4.4 evaluates Cube-fx and Sec. 4.5 gives the conclusions.
 
 \section{Background \& Motivation}
 
@@ -390,7 +391,7 @@ where $b$ is a constant value combining the Matrix MAC Count with the data movem
 
 \section{Evaluation \label{sec:5}}
 
-In this section, we evaluate the precision and efficiency performance of Cube-fx on Huawei Ascend 310 and Ascend 910B AI processors. All the experiments given in the evaluation are programmed as Ascend kernels (similar to CUDA Kernels) with Tensor Iterator Kernel (TIK, a Python library) based on a Huawei full-stack programming framework called AI heterogeneous Compute Architecture (CANN). Since Cube-fx can naturally execute in parallel, we only activate a single core during the evaluation for simplicity. Therefore, for Ascend 310 processors, we activate one Cube Unit with one Vector Unit; for Ascend 910B processors, we activate one Cube Unit with two Vector Units (one Cube Core with two Vector Cores), the most elementary structure. All the experiment results are evaluated from Huawei's official profiler tool, \textit{msprof}, which reports the detailed runtime information of a DaVinci Kernel. The data type we used during the evaluation is FP16, one of AI applications' most popular data types.
+In this section, we evaluate the precision and efficiency performance of Cube-fx on Huawei Ascend 310 and Ascend 910B AI processors. Since Cube-fx can naturally execute in parallel, we only activate a single core during the evaluation for simplicity. Therefore, for Ascend 310 processors, we activate one Cube Unit with one Vector Unit; for Ascend 910B processors, we activate one Cube Unit with two Vector Units (one Cube Core with two Vector Cores), the most elementary structure. All the experiment results are evaluated from Huawei's official profiler tool, \textit{msprof}, which reports the detailed runtime information of a DaVinci Kernel. The data type we used during the evaluation is FP16, one of AI applications' most popular data types.
 
 \subsection{Computation Precision Evaluation \label{Sec: 4.1}}
 
